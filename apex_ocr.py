@@ -1,16 +1,16 @@
 import csv
 import os
-import regex
+import time
 import winsound
 from collections import Counter, defaultdict
 from datetime import datetime
-from pprint import pprint, pformat
+from pprint import pformat, pprint
 
-import time
 import cv2
 import numpy
 import pytesseract
-from PIL import ImageGrab, Image
+import regex
+from PIL import ImageGrab
 
 ## CONFIGURABLE VARIABLES
 # name of stats file - must be in same dir as this file
