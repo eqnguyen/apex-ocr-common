@@ -136,7 +136,7 @@ def replace_nondigits(parsed_string: List[str]) -> List[int]:
     return numeric_list
 
 
-def write_to_file(filepath: Path, data:dict) -> None:
+def write_to_file(filepath: Path, data: dict) -> None:
     value_list = [data[header] for header in HEADERS]
 
     if filepath.is_file():
@@ -196,6 +196,8 @@ def main():
                 text = pytesseract.image_to_string(img, config=TESSERACT_CONFIG)
                 text = text.replace("\n", "").replace(" ", "").lower()
 
+                logger.debug(f"Image text, blur={blur_amount}: {text}")
+
                 for header, matcher in HEADER_MAP.items():
                     if header == "Squad Placed":
                         parsed_text = process_squad_placed(matcher.findall(text))
@@ -229,11 +231,17 @@ def main():
 
 
 if __name__ == "__main__":
-    logging.basicConfig(
-        format="%(asctime)s | %(levelname)s | %(message)s",
-        level=logging.DEBUG,
-        datefmt="%m/%d/%Y %H:%M:%S",
+    # Configure logger
+    handler = logging.StreamHandler()
+    formatter = logging.Formatter(
+        fmt="%(asctime)s | %(levelname)-7s | %(name)s | %(message)s",
+        datefmt="%Y-%m-%d %H:%M:%S",
     )
+    handler.setFormatter(formatter)
+    handler.setStream(tqdm)
+    handler.terminator = ""
+
+    logging.basicConfig(level=logging.DEBUG, handlers=[handler])
 
     try:
         main()
