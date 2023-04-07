@@ -27,17 +27,22 @@ def main():
         text = text.replace("\n", "").replace(" ", "").lower()
 
         if "summary" in text:
-            log_and_beep("Match Summary screen detected", 2000)
-
             if "xpbreakdown" in text:
+                log_and_beep("Personal summary screen detected", 2000)
                 results_dict = process_personal_summary_page(blurs)
                 output_path = PERSONAL_STATS_FILE
-            else:
+                headers = PERSONAL_SUMMARY_HEADERS
+            elif "totalkills" in text:
+                log_and_beep("Squad summary screen detected", 2000)
                 results_dict = process_squad_summary_page(blurs)
                 output_path = SQUAD_STATS_FILE
+                headers = SQUAD_SUMMARY_HEADERS
+            else:
+                time.sleep(1)
+                continue
 
-            write_to_file(output_path, results_dict)
-            logger.info(f"Finished writing interpretations to {output_path.name}")
+            if write_to_file(output_path, headers, results_dict):
+                logger.info(f"Finished writing results to {output_path.name}")
 
             # Add sleep so duplicate results aren't continuously processed
             time.sleep(3)

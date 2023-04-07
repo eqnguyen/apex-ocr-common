@@ -82,8 +82,12 @@ def replace_nondigits(parsed_string: List[str]) -> List[int]:
     return numeric_list
 
 
-def write_to_file(filepath: Path, data: dict) -> None:
-    value_list = [data[header] for header in PERSONAL_SUMMARY_HEADERS]
+def write_to_file(filepath: Path, headers: List[str], data: dict) -> bool:
+    try:
+        value_list = [data[header] for header in headers]
+    except KeyError as key:
+        logger.error(f"{key} does not exist in data!")
+        return False
 
     if filepath.is_file():
         # Append the game data
@@ -92,12 +96,14 @@ def write_to_file(filepath: Path, data: dict) -> None:
     else:
         # Write header row then game data
         write_method = "w"
-        rows_to_write = [PERSONAL_SUMMARY_HEADERS, value_list]
+        rows_to_write = [headers, value_list]
 
     with open(filepath, write_method, newline="") as f:
         writer = csv.writer(f)
         for row in rows_to_write:
             writer.writerow(row)
+
+    return True
 
 
 def log_and_beep(print_text: str, beep_freq: int) -> None:
