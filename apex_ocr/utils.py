@@ -5,8 +5,9 @@ from typing import List
 
 import cv2
 import numpy as np
-from config import *
 from PIL import Image
+
+from apex_ocr.config import *
 
 logger = logging.getLogger("apex_ocr")
 

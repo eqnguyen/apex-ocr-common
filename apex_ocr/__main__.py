@@ -4,10 +4,11 @@ from collections import Counter, defaultdict
 from datetime import datetime
 
 import pytesseract
-from config import *
 from PIL import ImageGrab
 from tqdm import tqdm
-from utils import *
+
+from apex_ocr.config import *
+from apex_ocr.utils import *
 
 logging.captureWarnings(True)
 logger = logging.getLogger("apex_ocr")
