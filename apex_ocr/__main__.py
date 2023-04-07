@@ -1,7 +1,6 @@
 import logging
 import time
 
-
 from tqdm import tqdm
 
 from apex_ocr.config import *
@@ -20,7 +19,13 @@ def main():
     for blur_level in BLUR_LEVELS:
         blurs.extend([blur_level] * NUM_IMAGES_PER_BLUR)
 
+    last_personal_results = {}
+    last_squad_results = {}
+
     while True:
+        # Initialize boolean flag for new result
+        new_result = False
+
         # Continuously grab screenshots and interpret them to identify the match summary screen
         img = preprocess_image(ImageGrab.grab(bbox=TOP_SCREEN), 3)
         text = pytesseract.image_to_string(img, config=TESSERACT_CONFIG)
@@ -32,17 +37,30 @@ def main():
                 results_dict = process_personal_summary_page(blurs)
                 output_path = PERSONAL_STATS_FILE
                 headers = PERSONAL_SUMMARY_HEADERS
+
+                if not equal_dicts(last_personal_results, results_dict, ["Datetime"]):
+                    last_personal_results = results_dict.copy()
+                    new_result = True
+
             elif "totalkills" in text:
                 log_and_beep("Squad summary screen detected", 2000)
                 results_dict = process_squad_summary_page(blurs)
                 output_path = SQUAD_STATS_FILE
                 headers = SQUAD_SUMMARY_HEADERS
+
+                if not equal_dicts(last_squad_results, results_dict, ["Datetime"]):
+                    last_squad_results = results_dict.copy()
+                    new_result = True
+
             else:
                 time.sleep(1)
                 continue
 
-            if write_to_file(output_path, headers, results_dict):
-                logger.info(f"Finished writing results to {output_path.name}")
+            if new_result:
+                if write_to_file(output_path, headers, results_dict):
+                    logger.info(f"Finished writing results to {output_path.name}")
+            else:
+                logger.info("Duplicate results processed")
 
             # Add sleep so duplicate results aren't continuously processed
             time.sleep(3)
