@@ -79,7 +79,7 @@ def replace_nondigits(parsed_string: List[str]) -> List[int]:
 
 
 def write_to_file(filepath: Path, data: dict) -> None:
-    value_list = [data[header] for header in HEADERS]
+    value_list = [data[header] for header in PERSONAL_SUMMARY_HEADERS]
 
     if filepath.is_file():
         # Append the game data
@@ -88,7 +88,7 @@ def write_to_file(filepath: Path, data: dict) -> None:
     else:
         # Write header row then game data
         write_method = "w"
-        rows_to_write = [HEADERS, value_list]
+        rows_to_write = [PERSONAL_SUMMARY_HEADERS, value_list]
 
     with open(filepath, write_method, newline="") as f:
         writer = csv.writer(f)

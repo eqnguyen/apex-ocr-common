@@ -13,6 +13,9 @@ from apex_ocr.utils import *
 logging.captureWarnings(True)
 logger = logging.getLogger("apex_ocr")
 
+# TODO: Add specific ROI for squad placement
+# TODO: Detect which screen is active then call function to handle team vs single player summary
+
 
 def main():
     logger.info("Watching screen...")
@@ -52,7 +55,7 @@ def main():
 
                 logger.debug(f"Image text, blur={blur_amount}: {text}")
 
-                for header, matcher in HEADER_MAP.items():
+                for header, matcher in PERSONAL_SUMMARY_MAP.items():
                     if header == "Squad Placed":
                         parsed_text = process_squad_placed(matcher.findall(text))
                     elif header == "Time Survived":

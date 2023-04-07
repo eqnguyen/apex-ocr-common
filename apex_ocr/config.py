@@ -10,7 +10,7 @@ TOP_SCREEN = (0, 0, 1920, 250)
 XP_BREAKDOWN = (200, 200, 1024, 625)
 FULL_SCREEN = (0, 0, 1920, 1080)
 
-HEADERS = [
+PERSONAL_SUMMARY_HEADERS = [
     "Datetime",
     "Place",
     "Time Survived",
@@ -22,6 +22,21 @@ HEADERS = [
     "Friends",
     "XP Earned",
 ]
+
+SQUAD_SUMMARY_HEADERS = [
+    "Datetime",
+    "Place",
+    "Suqad Kills",
+    "Player",
+    "Kills",
+    "Assists",
+    "Knocks",
+    "Damage",
+    "Time Survived",
+    "Revives",
+    "Respawns",
+]
+
 
 REPLACEMENTS = [
     ("x", ""),
@@ -43,7 +58,7 @@ REPLACEMENTS = [
 
 TESSERACT_CONFIG = "-c tessedit_char_whitelist=()/#01234567890ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz --psm 12"
 
-HEADER_MAP = {
+PERSONAL_SUMMARY_MAP = {
     "Place": regex.compile("#([0-9]{1,2})"),
     "Time Survived": regex.compile("(?:timesurvived\(){e<=2}(.*?)(?:\]|\))"),
     "Kills": regex.compile("(?:kills\(){e<=1}(.*?)(?:\]|\))"),
