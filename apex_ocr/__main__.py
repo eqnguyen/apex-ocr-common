@@ -1,38 +1,54 @@
 import logging
 import time
 
+import click
 from tqdm import tqdm
 
 from apex_ocr.config import *
+from apex_ocr.engine import ApexOCREngine, SummaryType
 from apex_ocr.utils import *
 
 logging.captureWarnings(True)
 logger = logging.getLogger("apex_ocr")
 
 
-def main():
-    logger.info("Watching screen...")
+@click.command()
+@click.argument("filename", required=False, type=click.Path(exists=True))
+def main(filename: str):
+    ocr_engine = ApexOCREngine()
 
-    blurs = []
-    for blur_level in BLUR_LEVELS:
-        blurs.extend([blur_level] * NUM_IMAGES_PER_BLUR)
+    if filename:
+        file_path = Path(filename)
 
-    last_personal_results = {}
-    last_squad_results = {}
+        logger.info(f"Performing OCR on {file_path.name}...")
 
-    while True:
-        # Initialize boolean flag for new result
-        new_result = False
+        summary_type = ocr_engine.classify_summary_page(file_path)
 
-        # Continuously grab screenshots and interpret them to identify the match summary screen
-        img = preprocess_image(ImageGrab.grab(bbox=TOP_SCREEN), 3)
-        text = pytesseract.image_to_string(img, config=TESSERACT_CONFIG)
-        text = text.replace("\n", "").replace(" ", "").lower()
+        if summary_type == SummaryType.PERSONAL:
+            results = ocr_engine.process_personal_summary_page(file_path)
+        elif summary_type == SummaryType.SQUAD:
+            results = ocr_engine.process_squad_summary_page(file_path)
+        else:
+            results = {}
 
-        if "summary" in text:
-            if "xpbreakdown" in text:
+        print(results)
+
+    else:
+        logger.info("Watching screen...")
+
+        last_personal_results = {}
+        last_squad_results = {}
+
+        while True:
+            # Initialize boolean flag for new result
+            new_result = False
+
+            # Continuously grab screenshots and interpret them to identify the match summary screen
+            summary_type = ocr_engine.classify_summary_page()
+
+            if summary_type == SummaryType.PERSONAL:
                 log_and_beep("Personal summary screen detected", 2000)
-                results_dict = process_personal_summary_page(blurs)
+                results_dict = ocr_engine.process_personal_summary_page()
                 output_path = PERSONAL_STATS_FILE
                 headers = PERSONAL_SUMMARY_HEADERS
 
@@ -40,9 +56,9 @@ def main():
                     last_personal_results = results_dict.copy()
                     new_result = True
 
-            elif "totalkills" in text:
+            elif summary_type == SummaryType.SQUAD:
                 log_and_beep("Squad summary screen detected", 2000)
-                results_dict = process_squad_summary_page(blurs)
+                results_dict = ocr_engine.process_squad_summary_page()
                 output_path = SQUAD_STATS_FILE
                 headers = SQUAD_SUMMARY_HEADERS
 

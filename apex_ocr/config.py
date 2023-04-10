@@ -8,14 +8,8 @@ SQUAD_STATS_FILE = Path(__file__).parent.parent / "data" / "squad_stats.csv"
 
 # Bounding boxes for image grabs
 TOP_SCREEN = (0, 0, 1920, 250)
-TEAM_SQUAD_PLACED = (1330, 110, 1600, 190)
-TEAM_SQUAD_KILLS = (1600, 110, 1845, 190)
 PERSONAL_SQUAD_PLACED = (1450, 0, 1720, 200)
 XP_BREAKDOWN = (200, 200, 1024, 625)
-P1_SUMMARY = (100, 250, 350, 750)
-P2_SUMMARY = (700, 250, 950, 750)
-P3_SUMMARY = (1300, 250, 1550, 750)
-FULL_SCREEN = (0, 0, 1920, 1080)
 
 PERSONAL_SUMMARY_HEADERS = [
     "Datetime",
@@ -114,6 +108,3 @@ SQUAD_SUMMARY_MAP = {
     "Respawns": regex.compile("(?:respawngiven){1}(\d+)"),
 }
 
-# Tuning parameters
-NUM_IMAGES_PER_BLUR = 1
-BLUR_LEVELS = [1, 3, 5, 7, 9, 11]

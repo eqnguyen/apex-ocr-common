@@ -1,3 +1,8 @@
+from typing import Tuple
+
+import numpy as np
+from PIL.Image import Image
+
 # Resolution: 1920 x 1080
 # Regions of interest
 roi = {}
@@ -161,9 +166,9 @@ roi["p3"]["respawns"] = (
 )
 
 
-def get_rois(img):
-    squad_place = img.crop(squad_place_roi)
-    total_kill = img.crop(total_kills_roi)
+def get_rois(img: Image) -> Tuple[np.ndarray, np.ndarray, dict]:
+    squad_place = np.array(img.crop(squad_place_roi))
+    total_kill = np.array(img.crop(total_kills_roi))
 
     players = {}
 
@@ -171,7 +176,7 @@ def get_rois(img):
         player_images = {}
         for stat in player[1].items():
             img_region = stat[1]
-            player_images[stat[0]] = img.crop(img_region)
+            player_images[stat[0]] = np.array(img.crop(img_region))
         players[player[0]] = player_images
 
     return squad_place, total_kill, players
