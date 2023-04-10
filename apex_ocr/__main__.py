@@ -9,8 +9,6 @@ from apex_ocr.utils import *
 logging.captureWarnings(True)
 logger = logging.getLogger("apex_ocr")
 
-# TODO: Add specific ROI for squad placement
-
 
 def main():
     logger.info("Watching screen...")
