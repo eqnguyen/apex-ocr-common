@@ -45,14 +45,19 @@ def main(filename: str):
             summary_type = ocr_engine.classify_summary_page()
 
             if summary_type == SummaryType.PERSONAL:
-                log_and_beep("Personal summary screen detected", 2000)
-                results_dict = ocr_engine.process_personal_summary_page()
-                output_path = PERSONAL_STATS_FILE
-                headers = PERSONAL_SUMMARY_HEADERS
+                # Skip personal summary page since all this information is contained on the squad
+                # summary. Uncomment this section and remove "continue" if you'd like to process
+                # this page.
 
-                if not equal_dicts(last_personal_results, results_dict, ["Datetime"]):
-                    last_personal_results = results_dict.copy()
-                    new_result = True
+                # log_and_beep("Personal summary screen detected", 2000)
+                # results_dict = ocr_engine.process_personal_summary_page()
+                # output_path = PERSONAL_STATS_FILE
+                # headers = PERSONAL_SUMMARY_HEADERS
+
+                # if not equal_dicts(last_personal_results, results_dict, ["Datetime"]):
+                #     last_personal_results = results_dict.copy()
+                #     new_result = True
+                continue
 
             elif summary_type == SummaryType.SQUAD:
                 log_and_beep("Squad summary screen detected", 2000)
