@@ -24,7 +24,7 @@ class SummaryType(enum.Enum):
 
 
 class ApexOCREngine:
-    def __init__(self, n_images_per_blur: int = 1, blur_levels=[3, 5, 7]) -> None:
+    def __init__(self, n_images_per_blur: int = 1, blur_levels=[0, 3, 5, 7]) -> None:
         self.paddle_ocr = PaddleOCR(
             use_angle_cls=True, lang="en", show_log=False, debug=False
         )
