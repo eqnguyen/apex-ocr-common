@@ -31,8 +31,6 @@ def main(filename: str):
         else:
             results = {}
 
-        logger.info(results)
-
     else:
         logger.info("Watching screen...")
 

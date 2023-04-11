@@ -226,7 +226,10 @@ class ApexOCREngine:
             else:
                 results_dict[k] = "n/a"
 
-        log_and_beep("Processing images...", 1500)
+        log_and_beep(
+            f"Finished processing images: {results_dict}",
+            1000,
+        )
 
         return results_dict
 

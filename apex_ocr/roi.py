@@ -5,174 +5,174 @@ from PIL.Image import Image
 
 # Resolution: 1920 x 1080
 # Regions of interest
-roi = {}
+ROI_DICT = {}
 
-top_row_start = 120
-player_row_start = 290
-kakn_row_start = 402
-damage_row_start = 480
-surv_time_row_start = 556
-rev_row_start = 632
-res_row_start = 708
+TOP_ROW_START = 120
+PLAYER_ROW_START = 290
+KAKN_ROW_START = 402
+DAMAGE_ROW_START = 480
+SURV_TIME_ROW_START = 556
+REV_ROW_START = 632
+RES_ROW_START = 708
 
-top_row_height = 62
-player_row_height = 32
+TOP_ROW_HEIGHT = 62
+PLAYER_ROW_HEIGHT = 32
 
-squad_place_col_start = 1345
-total_kill_col_start = 1600
-p1_col_start = 125
-p2_col_start = 725
-p3_col_start = 1325
+SQUAD_PLACE_COL_START = 1345
+TOTAL_KILL_COL_START = 1600
+P1_COL_START = 125
+P2_COL_START = 725
+P3_COL_START = 1325
 
-squad_place_width = 255
-total_kill_width = 220
-player_width = 215
-kakn_width = 150
-damage_width = 130
-surv_time_width = 130
-rev_res_width = 60
+SQUAD_PLACE_WIDTH = 255
+TOTAL_KILL_WIDTH = 220
+PLAYER_WIDTH = 215
+KAKN_WIDTH = 150
+DAMAGE_WIDTH = 130
+SURV_TIME_WIDTH = 130
+REV_RES_WIDTH = 60
 
 # Squad placement
-squad_place_roi = (
-    squad_place_col_start,
-    top_row_start,
-    squad_place_col_start + squad_place_width,
-    top_row_start + top_row_height,
+SQUAD_PLACE_ROI = (
+    SQUAD_PLACE_COL_START,
+    TOP_ROW_START,
+    SQUAD_PLACE_COL_START + SQUAD_PLACE_WIDTH,
+    TOP_ROW_START + TOP_ROW_HEIGHT,
 )
 
 # Total kills
-total_kills_roi = (
-    total_kill_col_start,
-    top_row_start,
-    total_kill_col_start + total_kill_width,
-    top_row_start + top_row_height,
+TOTAL_KILLS_ROI = (
+    TOTAL_KILL_COL_START,
+    TOP_ROW_START,
+    TOTAL_KILL_COL_START + TOTAL_KILL_WIDTH,
+    TOP_ROW_START + TOP_ROW_HEIGHT,
 )
 
 # Player 1
-roi["p1"] = {}
-roi["p1"]["player"] = (
-    p1_col_start,
-    player_row_start,
-    p1_col_start + player_width,
-    player_row_start + player_row_height,
+ROI_DICT["p1"] = {}
+ROI_DICT["p1"]["player"] = (
+    P1_COL_START,
+    PLAYER_ROW_START,
+    P1_COL_START + PLAYER_WIDTH,
+    PLAYER_ROW_START + PLAYER_ROW_HEIGHT,
 )
-roi["p1"]["kakn"] = (
-    p1_col_start,
-    kakn_row_start,
-    p1_col_start + kakn_width,
-    kakn_row_start + player_row_height,
+ROI_DICT["p1"]["kakn"] = (
+    P1_COL_START,
+    KAKN_ROW_START,
+    P1_COL_START + KAKN_WIDTH,
+    KAKN_ROW_START + PLAYER_ROW_HEIGHT,
 )
-roi["p1"]["damage"] = (
-    p1_col_start,
-    damage_row_start,
-    p1_col_start + damage_width,
-    damage_row_start + player_row_height,
+ROI_DICT["p1"]["damage"] = (
+    P1_COL_START,
+    DAMAGE_ROW_START,
+    P1_COL_START + DAMAGE_WIDTH,
+    DAMAGE_ROW_START + PLAYER_ROW_HEIGHT,
 )
-roi["p1"]["survival_time"] = (
-    p1_col_start,
-    surv_time_row_start,
-    p1_col_start + surv_time_width,
-    surv_time_row_start + player_row_height,
+ROI_DICT["p1"]["survival_time"] = (
+    P1_COL_START,
+    SURV_TIME_ROW_START,
+    P1_COL_START + SURV_TIME_WIDTH,
+    SURV_TIME_ROW_START + PLAYER_ROW_HEIGHT,
 )
-roi["p1"]["revives"] = (
-    p1_col_start,
-    rev_row_start,
-    p1_col_start + rev_res_width,
-    rev_row_start + player_row_height,
+ROI_DICT["p1"]["revives"] = (
+    P1_COL_START,
+    REV_ROW_START,
+    P1_COL_START + REV_RES_WIDTH,
+    REV_ROW_START + PLAYER_ROW_HEIGHT,
 )
-roi["p1"]["respawns"] = (
-    p1_col_start,
-    res_row_start,
-    p1_col_start + rev_res_width,
-    res_row_start + player_row_height,
+ROI_DICT["p1"]["respawns"] = (
+    P1_COL_START,
+    RES_ROW_START,
+    P1_COL_START + REV_RES_WIDTH,
+    RES_ROW_START + PLAYER_ROW_HEIGHT,
 )
 
 # Player 2
-roi["p2"] = {}
-roi["p2"]["player"] = (
-    p2_col_start,
-    player_row_start,
-    p2_col_start + player_width,
-    player_row_start + player_row_height,
+ROI_DICT["p2"] = {}
+ROI_DICT["p2"]["player"] = (
+    P2_COL_START,
+    PLAYER_ROW_START,
+    P2_COL_START + PLAYER_WIDTH,
+    PLAYER_ROW_START + PLAYER_ROW_HEIGHT,
 )
-roi["p2"]["kakn"] = (
-    p2_col_start,
-    kakn_row_start,
-    p2_col_start + kakn_width,
-    kakn_row_start + player_row_height,
+ROI_DICT["p2"]["kakn"] = (
+    P2_COL_START,
+    KAKN_ROW_START,
+    P2_COL_START + KAKN_WIDTH,
+    KAKN_ROW_START + PLAYER_ROW_HEIGHT,
 )
-roi["p2"]["damage"] = (
-    p2_col_start,
-    damage_row_start,
-    p2_col_start + damage_width,
-    damage_row_start + player_row_height,
+ROI_DICT["p2"]["damage"] = (
+    P2_COL_START,
+    DAMAGE_ROW_START,
+    P2_COL_START + DAMAGE_WIDTH,
+    DAMAGE_ROW_START + PLAYER_ROW_HEIGHT,
 )
-roi["p2"]["survival_time"] = (
-    p2_col_start,
-    surv_time_row_start,
-    p2_col_start + surv_time_width,
-    surv_time_row_start + player_row_height,
+ROI_DICT["p2"]["survival_time"] = (
+    P2_COL_START,
+    SURV_TIME_ROW_START,
+    P2_COL_START + SURV_TIME_WIDTH,
+    SURV_TIME_ROW_START + PLAYER_ROW_HEIGHT,
 )
-roi["p2"]["revives"] = (
-    p2_col_start,
-    rev_row_start,
-    p2_col_start + rev_res_width,
-    rev_row_start + player_row_height,
+ROI_DICT["p2"]["revives"] = (
+    P2_COL_START,
+    REV_ROW_START,
+    P2_COL_START + REV_RES_WIDTH,
+    REV_ROW_START + PLAYER_ROW_HEIGHT,
 )
-roi["p2"]["respawns"] = (
-    p2_col_start,
-    res_row_start,
-    p2_col_start + rev_res_width,
-    res_row_start + player_row_height,
+ROI_DICT["p2"]["respawns"] = (
+    P2_COL_START,
+    RES_ROW_START,
+    P2_COL_START + REV_RES_WIDTH,
+    RES_ROW_START + PLAYER_ROW_HEIGHT,
 )
 
 # Player 3
-roi["p3"] = {}
-roi["p3"]["player"] = (
-    p3_col_start,
-    player_row_start,
-    p3_col_start + player_width,
-    player_row_start + player_row_height,
+ROI_DICT["p3"] = {}
+ROI_DICT["p3"]["player"] = (
+    P3_COL_START,
+    PLAYER_ROW_START,
+    P3_COL_START + PLAYER_WIDTH,
+    PLAYER_ROW_START + PLAYER_ROW_HEIGHT,
 )
-roi["p3"]["kakn"] = (
-    p3_col_start,
-    kakn_row_start,
-    p3_col_start + kakn_width,
-    kakn_row_start + player_row_height,
+ROI_DICT["p3"]["kakn"] = (
+    P3_COL_START,
+    KAKN_ROW_START,
+    P3_COL_START + KAKN_WIDTH,
+    KAKN_ROW_START + PLAYER_ROW_HEIGHT,
 )
-roi["p3"]["damage"] = (
-    p3_col_start,
-    damage_row_start,
-    p3_col_start + damage_width,
-    damage_row_start + player_row_height,
+ROI_DICT["p3"]["damage"] = (
+    P3_COL_START,
+    DAMAGE_ROW_START,
+    P3_COL_START + DAMAGE_WIDTH,
+    DAMAGE_ROW_START + PLAYER_ROW_HEIGHT,
 )
-roi["p3"]["survival_time"] = (
-    p3_col_start,
-    surv_time_row_start,
-    p3_col_start + surv_time_width,
-    surv_time_row_start + player_row_height,
+ROI_DICT["p3"]["survival_time"] = (
+    P3_COL_START,
+    SURV_TIME_ROW_START,
+    P3_COL_START + SURV_TIME_WIDTH,
+    SURV_TIME_ROW_START + PLAYER_ROW_HEIGHT,
 )
-roi["p3"]["revives"] = (
-    p3_col_start,
-    rev_row_start,
-    p3_col_start + rev_res_width,
-    rev_row_start + player_row_height,
+ROI_DICT["p3"]["revives"] = (
+    P3_COL_START,
+    REV_ROW_START,
+    P3_COL_START + REV_RES_WIDTH,
+    REV_ROW_START + PLAYER_ROW_HEIGHT,
 )
-roi["p3"]["respawns"] = (
-    p3_col_start,
-    res_row_start,
-    p3_col_start + rev_res_width,
-    res_row_start + player_row_height,
+ROI_DICT["p3"]["respawns"] = (
+    P3_COL_START,
+    RES_ROW_START,
+    P3_COL_START + REV_RES_WIDTH,
+    RES_ROW_START + PLAYER_ROW_HEIGHT,
 )
 
 
 def get_rois(img: Image) -> Tuple[np.ndarray, np.ndarray, dict]:
-    squad_place = np.array(img.crop(squad_place_roi))
-    total_kill = np.array(img.crop(total_kills_roi))
+    squad_place = np.array(img.crop(SQUAD_PLACE_ROI))
+    total_kill = np.array(img.crop(TOTAL_KILLS_ROI))
 
     players = {}
 
-    for player in roi.items():
+    for player in ROI_DICT.items():
         player_images = {}
         for stat in player[1].items():
             img_region = stat[1]
