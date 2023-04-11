@@ -35,7 +35,8 @@ class ApexOCREngine:
 
         self.num_images = len(self.blurs)
 
-    def preprocess_image(self, image: np.ndarray, blur_amount: int = 0) -> np.ndarray:
+    @staticmethod
+    def preprocess_image(image: np.ndarray, blur_amount: int = 0) -> np.ndarray:
         grayscale_img = grayscale(image)
         threshold_img = thresholding(grayscale_img)
 
@@ -44,7 +45,8 @@ class ApexOCREngine:
         else:
             return threshold_img
 
-    def process_kakn(self, text: str) -> Tuple[int, int, int]:
+    @staticmethod
+    def process_kakn(text: str) -> Tuple[int, int, int]:
         parts = text.split("/")
 
         if len(parts) == 3:
@@ -53,7 +55,8 @@ class ApexOCREngine:
             logger.warning(f"Kills/Assists/Knocks misinterpreted: {parts}")
             return -1, -1, -1
 
-    def process_time_survived(self, text_list: List[str]) -> List[str]:
+    @staticmethod
+    def process_time_survived(text_list: List[str]) -> List[str]:
         time_survived_list = []
 
         for time_text in text_list:
@@ -70,8 +73,9 @@ class ApexOCREngine:
 
         return time_survived_list
 
+    @staticmethod
     def classify_summary_page(
-        self, image: Union[Path, np.ndarray, None] = None
+        image: Union[Path, np.ndarray, None] = None
     ) -> Union[SummaryType, None]:
         if image:
             if isinstance(image, np.ndarray):
@@ -81,7 +85,7 @@ class ApexOCREngine:
         else:
             img = np.array(ImageGrab.grab(bbox=TOP_SCREEN))
 
-        img = self.preprocess_image(img, blur_amount=3)
+        img = ApexOCREngine.preprocess_image(img, blur_amount=3)
         text = pytesseract.image_to_string(img, config=TESSERACT_CONFIG)
         text = text.replace("\n", "").replace(" ", "").lower()
 
@@ -93,10 +97,11 @@ class ApexOCREngine:
         else:
             return None
 
+    @staticmethod
     def text_from_image_tesseract(
-        self, image: np.ndarray, blur_amount: int, config: str = TESSERACT_CONFIG
+        image: np.ndarray, blur_amount: int, config: str = TESSERACT_CONFIG
     ) -> str:
-        img = self.preprocess_image(image, blur_amount)
+        img = ApexOCREngine.preprocess_image(image, blur_amount)
         text = pytesseract.image_to_string(img, config=config)
         text = text.replace("\n", "").replace(" ", "").lower()
         return text
