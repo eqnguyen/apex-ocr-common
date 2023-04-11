@@ -13,5 +13,7 @@ tqdm
 click
 black
 regex
-paddle
+paddlepaddle-gpu
 paddleocr
+psycopg2
+sqlalchemy

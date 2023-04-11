@@ -18,11 +18,16 @@ setup(
     packages=find_packages(),
     include_package_data=True,
     install_requires=[
+        "black",
         "numpy",
         "opencv-python",
         "Pillow",
         "pytesseract",
+        "paddlepadde-gpu",
+        "paddleocr",
         "regex",
         "tqdm",
+        "psycopg2",
+        "sqlalchemy"
     ],
 )
