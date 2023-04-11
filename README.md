@@ -2,9 +2,11 @@
 
 ## Requirements
 [requirements]: #requirements
-* Python >= 3.6
+* Python >= 3.8
 * Apex Legends
 * [Tesseract](https://github.com/tesseract-ocr/tesseract/wiki)
+* [PaddleOCR](https://github.com/PaddlePaddle/PaddleOCR)
+* [PostgreSQL](https://www.postgresql.org/)
 
 ## Installation
 [installation]: #installation
@@ -23,7 +25,28 @@ and must be in the same directory as `apex_ocr.py`.
 3. Adjust the `mon` variable, if necessary. The default value is `1920x1080`. This is a representation of the top half 
 of your monitor, because image processing takes less time for smaller images, and the stats on the Match Summary screen 
 are on the top half. Thus, the `mon` variable for a `1920x1080` monitor should be `(0, 0, 1920, 1080 / 2)` 
-(which is the default value). 
+(which is the default value).
+
+## Database
+
+By default, this tool will output results to CSVs files. However, this project can be configured to output to a SQL database as well. Alembic is used for managing database migrations, but before running the first command, make sure to add/update the `db.yml` file in this root directory.
+
+Sample file:
+
+```yaml
+dialect: postgresql
+username: postgres
+password: asdfijwe
+hostname: localhost
+port: 5432
+database_name: apex-legends
+```
+
+Once the proper database configurations have been set in `db.yml`, run the following command to initialize the database tables.
+
+```bash
+alembic upgrade head
+```
 
 ## Usage
 [usage]: #usage
