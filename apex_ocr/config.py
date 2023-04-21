@@ -13,6 +13,7 @@ XP_BREAKDOWN = (200, 200, 1024, 625)
 
 # Database output
 DATABASE = True
+DATABASE_YML_FILE = Path(__file__).parent.parent / "db.yml"
 
 # Headers
 PERSONAL_SUMMARY_HEADERS = [
