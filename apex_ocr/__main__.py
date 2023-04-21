@@ -12,6 +12,9 @@ logging.captureWarnings(True)
 logger = logging.getLogger("apex_ocr")
 
 
+# TODO: Integrate with database
+
+
 @click.command()
 @click.argument("filename", required=False, type=click.Path(exists=True))
 def main(filename: str):
