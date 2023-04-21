@@ -78,8 +78,5 @@ class MatchResult(Base):
     match_type = Column(Enum(MatchType), nullable=False)
     place = Column(Integer)
     result = Column(Enum(WinLoss))
-    p1_match_result_id = Column(Integer, ForeignKey("player_match_result.id"))
-    p2_match_result_id = Column(Integer, ForeignKey("player_match_result.id"))
-    p3_match_result_id = Column(Integer, ForeignKey("player_match_result.id"))
 
     player_match_results = relationship("PlayerMatchResult")
