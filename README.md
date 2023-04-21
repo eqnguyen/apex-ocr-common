@@ -77,6 +77,10 @@ Once the proper database configurations have been set in `db.yml`, run the follo
 alembic upgrade head
 ```
 
+### Schema
+
+![Database Schema](./docs/database_schema.jpg)
+
 ## Configuration
 
 [configuration]: #configuration
