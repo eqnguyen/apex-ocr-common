@@ -14,6 +14,24 @@ from apex_ocr.config import *
 logger = logging.getLogger(__name__)
 console = Console()
 
+REPLACEMENTS = [
+    ("x", ""),
+    ("d", "0"),
+    ("D", "0"),
+    ("o", "0"),
+    ("O", "0"),
+    ("!", "1"),
+    ("l", "1"),
+    ("I", "1"),
+    ("}", ")"),
+    ("{", "("),
+    ("]", ")"),
+    ("[", "("),
+    ("$", ""),
+    ("'", ""),
+    ('"', ""),
+]
+
 
 def log_and_beep(print_text: str, beep_freq: int) -> None:
     logger.info(print_text)
