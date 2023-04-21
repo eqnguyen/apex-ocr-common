@@ -12,7 +12,7 @@ PERSONAL_SQUAD_PLACED = (1450, 0, 1720, 200)
 XP_BREAKDOWN = (200, 200, 1024, 625)
 
 # Database output
-DATABASE = True
+DATABASE = False
 DATABASE_YML_FILE = Path(__file__).parent.parent / "db.yml"
 
 # Headers
