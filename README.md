@@ -103,7 +103,7 @@ Simply run the following command to start watching the screen for results:
 python -m apex_ocr
 ```
 
-The program should print `Watching Screen...` to the console to indicate that the it is actively monitoring screenshots for the Match Summary screen.
+After some time, the program should print `Watching Screen...` to the console to indicate that the it is actively monitoring screenshots for the Match Summary screen. It is common for the initialization process to take a long time because it is loading the model for the first time.
 
 A higher-pitched beep during the Match Summary screen indicates that the Match Summary screen has been recognized. A subsequent lower-pitched beep indicates that the requisite duplicate images have been taken, and you can now navigate away from the Match Summary screen. The OCR processing happens subsequently, and successful writing to the stats file is indicated by a console message.
 

@@ -2,14 +2,14 @@ import logging
 import time
 
 import click
-from tqdm import tqdm
+from rich.logging import RichHandler
 
 from apex_ocr.config import *
 from apex_ocr.engine import ApexOCREngine, SummaryType
 from apex_ocr.utils import *
 
 logging.captureWarnings(True)
-logger = logging.getLogger("apex_ocr")
+logger = logging.getLogger(__name__)
 
 
 # TODO: Integrate with database
@@ -28,11 +28,12 @@ def main(filename: str):
         summary_type = ocr_engine.classify_summary_page(file_path)
 
         if summary_type == SummaryType.PERSONAL:
-            results = ocr_engine.process_personal_summary_page(file_path)
+            results_dict = ocr_engine.process_personal_summary_page(file_path)
         elif summary_type == SummaryType.SQUAD:
-            results = ocr_engine.process_squad_summary_page(file_path)
+            results_dict = ocr_engine.process_squad_summary_page(file_path)
+            display_results(results_dict)
         else:
-            results = {}
+            results_dict = {}
 
     else:
         logger.info("Watching screen...")
@@ -72,6 +73,8 @@ def main(filename: str):
                     last_squad_results = results_dict.copy()
                     new_result = True
 
+                display_results(results_dict)
+
             else:
                 time.sleep(1)
                 continue
@@ -90,16 +93,13 @@ def main(filename: str):
 
 if __name__ == "__main__":
     # Configure logger
-    handler = logging.StreamHandler()
-    formatter = logging.Formatter(
-        fmt="%(asctime)s | %(levelname)-7s | %(name)s | %(message)s",
+    logging.basicConfig(
+        level=logging.DEBUG,
+        format=" %(name)s | %(message)s",
         datefmt="%Y-%m-%d %H:%M:%S",
+        force=True,
+        handlers=[RichHandler(omit_repeated_times=False, show_path=False)],
     )
-    handler.setFormatter(formatter)
-    handler.setStream(tqdm)
-    handler.terminator = ""
-
-    logging.basicConfig(level=logging.DEBUG, handlers=[handler])
 
     try:
         main()

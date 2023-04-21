@@ -34,6 +34,7 @@ setup(
         "pytesseract",
         "python-dateutil",
         "regex",
+        "rich",
         "six",
         "sqlalchemy",
         "tqdm",

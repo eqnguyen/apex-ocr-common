@@ -107,4 +107,3 @@ SQUAD_SUMMARY_MAP = {
     "Revives": regex.compile("(?:revivegiven){1}(\d+)"),
     "Respawns": regex.compile("(?:respawngiven){1}(\d+)"),
 }
-
