@@ -105,6 +105,16 @@ def equal_dicts(d1: dict, d2: dict, ignore_keys: List[str]) -> bool:
     return True
 
 
+def time_survived_to_seconds(survival_time: str) -> int:
+    time_survived = 0
+    split_text = survival_time.split(":")
+
+    for i, value in enumerate(reversed(split_text)):
+        time_survived += (60**i) * int(value)
+
+    return time_survived
+
+
 def write_to_file(filepath: Path, headers: List[str], data: dict) -> bool:
     try:
         value_list = [data[header] for header in headers]
