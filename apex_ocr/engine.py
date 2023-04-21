@@ -8,14 +8,14 @@ import numpy as np
 import pytesseract
 from paddleocr import PaddleOCR
 from PIL import Image, ImageGrab
-from tqdm import tqdm
+from rich.progress import track
 
 from apex_ocr.config import *
 from apex_ocr.preprocessing import *
 from apex_ocr.roi import get_rois
 from apex_ocr.utils import *
 
-logger = logging.getLogger("ApexOCREngine")
+logger = logging.getLogger(__name__)
 
 
 class SummaryType(enum.Enum):
@@ -135,7 +135,9 @@ class ApexOCREngine:
         matches = defaultdict(list)
 
         # OCR for all the images captured, then assign interpretation to the associated stat
-        for img, blur_amount in tqdm(list(zip(dup_images, self.blurs))):
+        for img, blur_amount in track(
+            list(zip(dup_images, self.blurs)), description="Image blurs"
+        ):
             # Get regions of interest
             squad_place, total_kills, players = get_rois(img)
 
@@ -232,7 +234,7 @@ class ApexOCREngine:
                 results_dict[k] = "n/a"
 
         log_and_beep(
-            f"Finished processing images: {results_dict}",
+            f"Finished processing images",
             1000,
         )
 
@@ -260,7 +262,7 @@ class ApexOCREngine:
         log_and_beep("Processing images...", 1500)
 
         # OCR for all the images captured, then assign interpretation to the associated stat
-        for place_image, xp_image, blur_amount in tqdm(
+        for place_image, xp_image, blur_amount in track(
             list(zip(place_images, xp_images, self.blurs))
         ):
             # Get text from the images

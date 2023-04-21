@@ -3,15 +3,70 @@ import logging
 import winsound
 from typing import List
 
+from rich.align import Align
+from rich.columns import Columns
+from rich.console import Console
+from rich.panel import Panel
+from rich.table import Table
+
 from apex_ocr.config import *
 
-logger = logging.getLogger("apex_ocr")
+logger = logging.getLogger(__name__)
+console = Console()
+
+REPLACEMENTS = [
+    ("x", ""),
+    ("d", "0"),
+    ("D", "0"),
+    ("o", "0"),
+    ("O", "0"),
+    ("!", "1"),
+    ("l", "1"),
+    ("I", "1"),
+    ("}", ")"),
+    ("{", "("),
+    ("]", ")"),
+    ("[", "("),
+    ("$", ""),
+    ("'", ""),
+    ('"', ""),
+]
 
 
 def log_and_beep(print_text: str, beep_freq: int) -> None:
     logger.info(print_text)
     if beep_freq:
         winsound.Beep(beep_freq, 500)
+
+
+def display_results(results: dict) -> None:
+    player_tables = [
+        Table(show_header=False),
+        Table(show_header=False),
+        Table(show_header=False),
+    ]
+
+    for i, player in enumerate(["P1", "P2", "P3"]):
+        player_tables[i].title = results[player]
+
+        for stat in [
+            "Kills",
+            "Assists",
+            "Knocks",
+            "Damage",
+            "Time Survived",
+            "Revives",
+            "Respawns",
+        ]:
+            player_tables[i].add_row(stat, str(results[player + " " + stat]))
+
+    panel = Panel(
+        Align.center(Columns(player_tables)),
+        title=f"[green]Squad Placed: #{results['Place']} - [red]Squad Kills: {results['Squad Kills']}",
+        padding=(1, 2),
+        expand=False,
+    )
+    console.print(panel)
 
 
 def replace_nondigits(parsed_string: List[str]) -> List[int]:
@@ -48,6 +103,16 @@ def equal_dicts(d1: dict, d2: dict, ignore_keys: List[str]) -> bool:
             return False
 
     return True
+
+
+def time_survived_to_seconds(survival_time: str) -> int:
+    time_survived = 0
+    split_text = survival_time.split(":")
+
+    for i, value in enumerate(reversed(split_text)):
+        time_survived += (60**i) * int(value)
+
+    return time_survived
 
 
 def write_to_file(filepath: Path, headers: List[str], data: dict) -> bool:

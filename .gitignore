@@ -164,3 +164,7 @@ cython_debug/
 
 # Saved data
 *.csv
+
+db.yml
+
+*.mdj

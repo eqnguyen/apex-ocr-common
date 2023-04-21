@@ -11,6 +11,11 @@ TOP_SCREEN = (0, 0, 1920, 250)
 PERSONAL_SQUAD_PLACED = (1450, 0, 1720, 200)
 XP_BREAKDOWN = (200, 200, 1024, 625)
 
+# Database output
+DATABASE = False
+DATABASE_YML_FILE = Path(__file__).parent.parent / "db.yml"
+
+# Headers
 PERSONAL_SUMMARY_HEADERS = [
     "Datetime",
     "Place",
@@ -54,35 +59,11 @@ SQUAD_SUMMARY_HEADERS = [
     "P3 Respawns",
 ]
 
-
-REPLACEMENTS = [
-    ("x", ""),
-    ("d", "0"),
-    ("D", "0"),
-    ("o", "0"),
-    ("O", "0"),
-    ("!", "1"),
-    ("l", "1"),
-    ("I", "1"),
-    ("}", ")"),
-    ("{", "("),
-    ("]", ")"),
-    ("[", "("),
-    ("$", ""),
-    ("'", ""),
-    ('"', ""),
-]
-
-WHITELIST_CHARS = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789[]-_/"
-NUMERIC_WHITELIST_CHARS = "DIOdilo0123456789!/"
+# Tesseract configurations
 TESSERACT_CONFIG = "-c tessedit_char_whitelist=()/#01234567890ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz --psm 11"
 TESSERACT_BLOCK_CONFIG = "-c tessedit_char_whitelist=()/#01234567890ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz --psm 6"
-TESSERACT_RESULT_CONFIG = "-c tessedit_char_whitelist=ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789[]-_# --psm 6"
-TESSERACT_PLAYER_CONFIG = "-c tessedit_char_whitelist=ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789[]-_# --psm 7"
-TESSERACT_KAKN_CONFIG = "-c tessedit_char_whitelist=/0123456789 --psm 7"
-TESSERACT_TIME_CONFIG = "-c tessedit_char_whitelist=:0123456789 --psm 7"
-TESSERACT_NUM_CONFIG = "-c tessedit_char_whitelist=0123456789 --psm 7"
 
+# Regular expressions
 PERSONAL_SUMMARY_MAP = {
     "Place": regex.compile("#([0-9]{1,2})"),
     "Time Survived": regex.compile("(?:timesurvived\(){e<=2}(.*?)(?:\]|\))"),
@@ -107,4 +88,3 @@ SQUAD_SUMMARY_MAP = {
     "Revives": regex.compile("(?:revivegiven){1}(\d+)"),
     "Respawns": regex.compile("(?:respawngiven){1}(\d+)"),
 }
-
