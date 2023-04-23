@@ -34,7 +34,7 @@ class ApexDatabaseApi:
         )
         self.add(match_result)
 
-        for i, p_num in enumerate(["P1", "P2", "P3"]):
+        for p_num in ["P1", "P2", "P3"]:
             # Commit players if not already in database
             player_name = results[p_num]
             player = self.session.query(Player).filter_by(name=player_name).first()
