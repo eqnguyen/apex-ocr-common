@@ -4,11 +4,10 @@ click
 cycler
 kiwisolver
 matplotlib
-mss
 numpy
 opencv-python
-paddleocr
 paddlepaddle-gpu
+paddleocr
 Pillow
 psycopg2
 pyparsing
@@ -18,4 +17,3 @@ regex
 rich
 six
 sqlalchemy
-tqdm

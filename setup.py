@@ -14,7 +14,7 @@ setup(
     long_description_content_type="text/markdown",
     author="Eric Nguyen",
     license="MIT",
-    python_requires=">=3.6",
+    python_requires=">=3.8",
     packages=find_packages(),
     include_package_data=True,
     install_requires=[
@@ -24,11 +24,10 @@ setup(
         "cycler",
         "kiwisolver",
         "matplotlib",
-        "mss",
         "numpy",
         "opencv-python",
-        "paddleocr",
         "paddlepaddle-gpu",
+        "paddleocr",
         "Pillow",
         "psycopg2",
         "pyparsing",
@@ -38,6 +37,5 @@ setup(
         "rich",
         "six",
         "sqlalchemy",
-        "tqdm",
     ],
 )
