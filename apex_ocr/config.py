@@ -3,8 +3,10 @@ from pathlib import Path
 import regex
 
 # Path to stats file
-PERSONAL_STATS_FILE = Path(__file__).parent.parent / "data" / "personal_stats.csv"
-SQUAD_STATS_FILE = Path(__file__).parent.parent / "data" / "squad_stats.csv"
+DATA_DIRECTORY = Path(__file__).parent.parent / "data"
+DATA_DIRECTORY.mkdir(parents=True, exist_ok=True)
+PERSONAL_STATS_FILE = DATA_DIRECTORY / "personal_stats.csv"
+SQUAD_STATS_FILE = DATA_DIRECTORY / "squad_stats.csv"
 
 # Bounding boxes for image grabs
 TOP_SCREEN = (0, 0, 1920, 250)
