@@ -331,7 +331,7 @@ class ApexOCREngine:
             # summary. Uncomment this section and remove "continue" if you'd like to process
             # this page.
 
-            # results_dict = self.process_personal_summary_page()
+            # results_dict = self.process_personal_summary_page(image)
             # output_path = PERSONAL_STATS_FILE
             # headers = PERSONAL_SUMMARY_HEADERS
 
@@ -342,7 +342,7 @@ class ApexOCREngine:
             pass
 
         elif summary_type == SummaryType.SQUAD:
-            results_dict = self.process_squad_summary_page()
+            results_dict = self.process_squad_summary_page(image)
             output_path = SQUAD_STATS_FILE
             headers = SQUAD_SUMMARY_HEADERS
 
