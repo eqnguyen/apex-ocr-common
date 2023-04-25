@@ -6,11 +6,12 @@ from typing import List, Tuple, Union
 
 import numpy as np
 import pytesseract
+import yaml
 from paddleocr import PaddleOCR
 from PIL import Image, ImageGrab
-from rich.progress import track
 
 from apex_ocr.config import *
+from apex_ocr.database.api import ApexDatabaseApi
 from apex_ocr.preprocessing import *
 from apex_ocr.roi import get_rois
 from apex_ocr.utils import *
@@ -34,6 +35,8 @@ class ApexOCREngine:
             self.blurs.extend([blur_level] * n_images_per_blur)
 
         self.num_images = len(self.blurs)
+
+        self.initialize_database_engine()
 
     @staticmethod
     def preprocess_image(image: np.ndarray, blur_amount: int = 0) -> np.ndarray:
@@ -106,6 +109,26 @@ class ApexOCREngine:
         text = text.replace("\n", "").replace(" ", "").lower()
         return text
 
+    def initialize_database_engine(self):
+        if DATABASE:
+            with open(DATABASE_YML_FILE) as db_file:
+                db_config = yaml.load(db_file, Loader=yaml.FullLoader)
+
+            dialect = db_config["dialect"]
+            username = db_config["username"]
+            password = db_config["password"]
+            hostname = db_config["hostname"]
+            port = db_config["port"]
+            database_name = db_config["database_name"]
+
+            db_conn_str = (
+                f"{dialect}://{username}:{password}@{hostname}:{port}/{database_name}"
+            )
+
+            self.db_conn = ApexDatabaseApi(db_conn_str)
+        else:
+            self.db_conn = None
+
     def text_from_image_paddleocr(self, image: np.ndarray, blur_amount: int) -> str:
         img = self.preprocess_image(image, blur_amount)
         texts = self.paddle_ocr.ocr(img, det=False, cls=False)[0]
@@ -134,10 +157,10 @@ class ApexOCREngine:
         results_dict["Datetime"] = datetime.now()
         matches = defaultdict(list)
 
+        log_and_beep("Processing squad summary...", 1500)
+
         # OCR for all the images captured, then assign interpretation to the associated stat
-        for img, blur_amount in track(
-            list(zip(dup_images, self.blurs)), description="Image blurs"
-        ):
+        for img, blur_amount in zip(dup_images, self.blurs):
             # Get regions of interest
             squad_place, total_kills, players = get_rois(img)
 
@@ -186,10 +209,8 @@ class ApexOCREngine:
                                     [kakn_text[0], kakn_text[2], kakn_text[4]]
                                 )
 
-                            try:
-                                kills, assists, knocks = self.process_kakn(kakn_text)
-                            except:
-                                continue
+                            kills, assists, knocks = self.process_kakn(kakn_text)
+
                             matches[player.upper() + " Kills"].append(kills)
                             matches[player.upper() + " Assists"].append(assists)
                             matches[player.upper() + " Knocks"].append(knocks)
@@ -259,11 +280,11 @@ class ApexOCREngine:
         results_dict["Datetime"] = datetime.now()
         matches = defaultdict(list)
 
-        log_and_beep("Processing images...", 1500)
+        log_and_beep("Processing personal summary...", 1500)
 
         # OCR for all the images captured, then assign interpretation to the associated stat
-        for place_image, xp_image, blur_amount in track(
-            list(zip(place_images, xp_images, self.blurs))
+        for place_image, xp_image, blur_amount in zip(
+            place_images, xp_images, self.blurs
         ):
             # Get text from the images
             place_text = self.text_from_image_paddleocr(place_image, blur_amount)
@@ -298,3 +319,45 @@ class ApexOCREngine:
         )
 
         return results_dict
+
+    def process_screenshot(self, image: Union[Path, np.ndarray, None] = None) -> None:
+        summary_type = ApexOCREngine.classify_summary_page(image)
+        results_dict = {}
+
+        if summary_type == SummaryType.PERSONAL:
+            # Skip personal summary page since all this information is contained on the squad
+            # summary. Uncomment this section and remove "continue" if you'd like to process
+            # this page.
+
+            # results_dict = self.process_personal_summary_page(image)
+            # output_path = PERSONAL_STATS_FILE
+            # headers = PERSONAL_SUMMARY_HEADERS
+
+            # if not equal_dicts(last_personal_results, results_dict, ["Datetime"]):
+            #     last_personal_results = results_dict.copy()
+            #     new_result = True
+
+            pass
+
+        elif summary_type == SummaryType.SQUAD:
+            results_dict = self.process_squad_summary_page(image)
+            output_path = SQUAD_STATS_FILE
+            headers = SQUAD_SUMMARY_HEADERS
+
+            # TODO: Fix check for existing results
+            # if not equal_dicts(last_squad_results, results_dict, ["Datetime"]):
+            #     last_squad_results = results_dict.copy()
+            #     new_result = True
+        
+        else:
+            logger.warning("Unknown summary page detected")
+
+        if results_dict:
+            # TODO: Handle personal results dictionary
+            display_results(results_dict)
+
+            if write_to_file(output_path, headers, results_dict):
+                logger.info(f"Finished writing results to {output_path.name}")
+
+            if DATABASE and self.db_conn is not None:
+                self.db_conn.push_results(results_dict)
