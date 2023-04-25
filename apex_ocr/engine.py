@@ -209,10 +209,8 @@ class ApexOCREngine:
                                     [kakn_text[0], kakn_text[2], kakn_text[4]]
                                 )
 
-                            try:
-                                kills, assists, knocks = self.process_kakn(kakn_text)
-                            except:
-                                continue
+                            kills, assists, knocks = self.process_kakn(kakn_text)
+
                             matches[player.upper() + " Kills"].append(kills)
                             matches[player.upper() + " Assists"].append(assists)
                             matches[player.upper() + " Knocks"].append(knocks)
@@ -350,6 +348,9 @@ class ApexOCREngine:
             # if not equal_dicts(last_squad_results, results_dict, ["Datetime"]):
             #     last_squad_results = results_dict.copy()
             #     new_result = True
+        
+        else:
+            logger.warning("Unknown summary page detected")
 
         if results_dict:
             # TODO: Handle personal results dictionary
