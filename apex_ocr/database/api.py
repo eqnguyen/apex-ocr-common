@@ -1,10 +1,11 @@
+import logging
+
 from sqlalchemy import create_engine
 from sqlalchemy.orm.session import sessionmaker
 
 from apex_ocr.utils import time_survived_to_seconds
 
-from .models import Clan, MatchResult, Player, PlayerMatchResult
-import logging
+from .models import Clan, MatchResult, MatchType, Player, PlayerMatchResult
 
 logger = logging.getLogger(__name__)
 
