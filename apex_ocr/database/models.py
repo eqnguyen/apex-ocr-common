@@ -46,9 +46,21 @@ class Player(Base):
     __tablename__ = "player"
 
     id = Column(Integer, primary_key=True)
+    clan_id = Column(Integer, ForeignKey("clan.id"))
     name = Column(String, nullable=False)
 
     match_results = relationship("PlayerMatchResult", back_populates="player")
+    clan = relationship("Clan", back_populates="players")
+
+
+class Clan(Base):
+    __tablename__ = "clan"
+
+    id = Column(Integer, primary_key=True)
+    tag = Column(String, nullable=False)
+    name = Column(String)
+
+    players = relationship("Player", back_populates="clan")
 
 
 class PlayerMatchResult(Base):
@@ -78,5 +90,6 @@ class MatchResult(Base):
     match_type = Column(Enum(MatchType), nullable=False)
     place = Column(Integer)
     result = Column(Enum(WinLoss))
+    hash = Column(String, nullable=False)
 
     player_match_results = relationship("PlayerMatchResult")
