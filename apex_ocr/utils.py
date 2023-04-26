@@ -1,7 +1,9 @@
 import csv
+import hashlib
+import json
 import logging
 import winsound
-from typing import List
+from typing import Any, Dict, List
 
 from rich.align import Align
 from rich.columns import Columns
@@ -65,6 +67,7 @@ def display_results(results: dict) -> None:
         title=f"[green]Squad Placed: #{results['Place']} - [red]Squad Kills: {results['Squad Kills']}",
         padding=(1, 2),
         expand=False,
+        subtitle=dict_hash(results, ["Datetime"]),
     )
     console.print(panel)
 
@@ -113,6 +116,25 @@ def time_survived_to_seconds(survival_time: str) -> int:
         time_survived += (60**i) * int(value)
 
     return time_survived
+
+
+def dict_hash(dictionary: Dict[str, Any], ignore: List[str] = []) -> str:
+    """MD5 hash of a dictionary.
+    Taken from https://www.doc.ic.ac.uk/~nuric/coding/how-to-hash-a-dictionary-in-python.html
+    """
+    dhash = hashlib.md5()
+    # We need to sort arguments so {'a': 1, 'b': 2} is
+    # the same as {'b': 2, 'a': 1}
+
+    dict_copy = dictionary.copy()
+
+    for key in ignore:
+        dict_copy.pop(key)
+
+    encoded = json.dumps(dict_copy, sort_keys=True, default=str).encode()
+    dhash.update(encoded)
+
+    return dhash.hexdigest()
 
 
 def write_to_file(filepath: Path, headers: List[str], data: dict) -> bool:
