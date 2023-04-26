@@ -69,6 +69,7 @@ def display_results(results: dict) -> None:
         expand=False,
         subtitle=dict_hash(results, ["Datetime"]),
     )
+    console.print("\n")
     console.print(panel)
 
 

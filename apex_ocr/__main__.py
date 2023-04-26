@@ -3,7 +3,15 @@ import time
 
 import click
 from rich.logging import RichHandler
-from rich.progress import track
+from rich.progress import (
+    BarColumn,
+    MofNCompleteColumn,
+    Progress,
+    TaskProgressColumn,
+    TextColumn,
+    TimeElapsedColumn,
+    TimeRemainingColumn,
+)
 
 from apex_ocr.config import *
 from apex_ocr.engine import ApexOCREngine
@@ -33,9 +41,21 @@ def main(filepath: str):
                 ]
             )
 
-        for screenshot_path in track(file_list):
-            logger.info(f"Performing OCR on {screenshot_path.name}...")
-            ocr_engine.process_screenshot(screenshot_path)
+        with Progress(
+            TextColumn("[progress.description]{task.description}"),
+            BarColumn(),
+            MofNCompleteColumn(),
+            TaskProgressColumn(),
+            TimeElapsedColumn(),
+            TimeRemainingColumn(),
+        ) as pb:
+            task1 = pb.add_task("Processing screenshots...", total=len(file_list))
+
+            for screenshot_path in file_list:
+                logger.info(f"Performing OCR on {screenshot_path.name}...")
+                ocr_engine.process_screenshot(screenshot_path)
+
+                pb.update(task1, advance=1)
 
     else:
         logger.info("Watching screen...")
