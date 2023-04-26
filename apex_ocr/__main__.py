@@ -1,5 +1,6 @@
 import logging
 import time
+import traceback
 
 import click
 from rich.logging import RichHandler
@@ -80,3 +81,4 @@ if __name__ == "__main__":
         main()
     except Exception as e:
         logger.error(e)
+        traceback.print_exc()
