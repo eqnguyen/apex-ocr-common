@@ -1,6 +1,5 @@
+import re
 from pathlib import Path
-
-import regex
 
 # Valid image extensions
 IMAGE_EXTENSIONS = [".jpg", ".jpeg", ".png"]
@@ -70,26 +69,26 @@ TESSERACT_BLOCK_CONFIG = "-c tessedit_char_whitelist=()/#01234567890ABCDEFGHIJKL
 
 # Regular expressions
 PERSONAL_SUMMARY_MAP = {
-    "Place": regex.compile("#([0-9]{1,2})"),
-    "Time Survived": regex.compile("(?:timesurvived\(){e<=2}(.*?)(?:\]|\))"),
-    "Kills": regex.compile("(?:kills\(){e<=1}(.*?)(?:\]|\))"),
-    "Damage": regex.compile("(?:damagedone\(){e<=2}(.*?)(?:\]|\))"),
-    "Revives": regex.compile("(?:reviveally\(){e<=2}(.*?)(?:\]|\))"),
-    "Respawns": regex.compile("(?:respawnally\(){e<=2}(.*?)(?:\]|\))"),
-    "Champions Killed": regex.compile("(?:killedchampion\(){e<=2}(.*?)(?:\]|\))"),
-    "Friends": regex.compile("(?:playingwithfriends\(){e<=2}(.*?)(?:\]|\))"),
-    "XP Earned": regex.compile("(?:totalxpearned){1}(\d+)"),
+    "Place": re.compile("#([0-9]{1,2})"),
+    "Time Survived": re.compile("(?:timesurvived\(){e<=2}(.*?)(?:\]|\))"),
+    "Kills": re.compile("(?:kills\(){e<=1}(.*?)(?:\]|\))"),
+    "Damage": re.compile("(?:damagedone\(){e<=2}(.*?)(?:\]|\))"),
+    "Revives": re.compile("(?:reviveally\(){e<=2}(.*?)(?:\]|\))"),
+    "Respawns": re.compile("(?:respawnally\(){e<=2}(.*?)(?:\]|\))"),
+    "Champions Killed": re.compile("(?:killedchampion\(){e<=2}(.*?)(?:\]|\))"),
+    "Friends": re.compile("(?:playingwithfriends\(){e<=2}(.*?)(?:\]|\))"),
+    "XP Earned": re.compile("(?:totalxpearned){1}(\d+)"),
 }
 
 SQUAD_SUMMARY_MAP = {
-    "Place": regex.compile("#([0-9]{1,2})"),
-    "Squad Kills": regex.compile("(?:totalkills){1}([dDoO!lI0-9]{1,2})"),
-    "Player": regex.compile("#([0-9]{1,2})"),
-    "Kills/Assists/Knocks": regex.compile(
+    "Place": re.compile("#([0-9]{1,2})"),
+    "Squad Kills": re.compile("(?:totalkills){1}([dDoO!lI0-9]{1,2})"),
+    "Player": re.compile("#([0-9]{1,2})"),
+    "Kills/Assists/Knocks": re.compile(
         "(?:kills/assists/knocks){1}([dDoO!lI0-9]{1,2}/[dDoO!lI0-9]{1,2}/[dDoO!lI0-9]{1,2})"
     ),
-    "Damage": regex.compile("(?:amagedealt){1}(\d+)"),
-    "Time Survived": regex.compile("(?:survivaltime){1}(\d+)"),
-    "Revives": regex.compile("(?:revivegiven){1}(\d+)"),
-    "Respawns": regex.compile("(?:respawngiven){1}(\d+)"),
+    "Damage": re.compile("(?:amagedealt){1}(\d+)"),
+    "Time Survived": re.compile("(?:survivaltime){1}(\d+)"),
+    "Revives": re.compile("(?:revivegiven){1}(\d+)"),
+    "Respawns": re.compile("(?:respawngiven){1}(\d+)"),
 }

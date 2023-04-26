@@ -1,5 +1,6 @@
 import enum
 import logging
+import re
 from collections import Counter, defaultdict
 from datetime import datetime
 from typing import List, Tuple, Union
@@ -203,7 +204,7 @@ class ApexOCREngine:
                             )
                             if (
                                 len(kakn_text) == 5
-                                and regex.search(r"\d+/\d+/\d+", kakn_text) is None
+                                and re.search(r"\d+/\d+/\d+", kakn_text) is None
                             ):
                                 kakn_text = "/".join(
                                     [kakn_text[0], kakn_text[2], kakn_text[4]]
@@ -348,7 +349,7 @@ class ApexOCREngine:
             # if not equal_dicts(last_squad_results, results_dict, ["Datetime"]):
             #     last_squad_results = results_dict.copy()
             #     new_result = True
-        
+
         else:
             logger.warning("Unknown summary page detected")
 

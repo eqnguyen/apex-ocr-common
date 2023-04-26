@@ -163,8 +163,11 @@ cython_debug/
 .vscode/
 
 # Saved data
+data/
 *.csv
 
+# Database configuration
 db.yml
 
+# UML project files
 *.mdj
