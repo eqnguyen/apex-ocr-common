@@ -67,7 +67,7 @@ def display_results(results: dict) -> None:
         title=f"[green]Squad Placed: #{results['Place']} - [red]Squad Kills: {results['Squad Kills']}",
         padding=(1, 2),
         expand=False,
-        subtitle=dict_hash(results, ["Datetime"]),
+        subtitle=results["Hash"],
     )
     console.print("\n")
     console.print(panel)

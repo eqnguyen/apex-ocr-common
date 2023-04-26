@@ -31,6 +31,7 @@ PERSONAL_SUMMARY_HEADERS = [
     "Champions Killed",
     "Friends",
     "XP Earned",
+    "Hash",
 ]
 
 SQUAD_SUMMARY_HEADERS = [
@@ -61,6 +62,7 @@ SQUAD_SUMMARY_HEADERS = [
     "P3 Time Survived",
     "P3 Revives",
     "P3 Respawns",
+    "Hash",
 ]
 
 # Tesseract configurations

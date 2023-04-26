@@ -184,6 +184,8 @@ class ApexOCREngine:
                             SQUAD_SUMMARY_MAP[header].findall(total_kills_text)
                         )
                     )
+                elif header == "Hash":
+                    continue
                 else:
                     # Player section
                     player = header.split(" ")[0].lower()
@@ -355,6 +357,7 @@ class ApexOCREngine:
 
         if results_dict:
             # TODO: Handle personal results dictionary
+            results_dict["Hash"] = dict_hash(results_dict, ["Datetime"])
             display_results(results_dict)
 
             if write_to_file(output_path, headers, results_dict):
