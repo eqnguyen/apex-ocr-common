@@ -87,11 +87,22 @@ class ApexOCREngine:
             elif isinstance(image, Path):
                 img = cv2.imread(str(image))
         else:
-            img = np.array(ImageGrab.grab(bbox=TOP_SCREEN))
+            image = ImageGrab.grab(bbox=TOP_SCREEN)
+            img = np.array(image)
+
+        # For DEBUG
+        image.save(DATA_DIRECTORY / f"raw_{datetime.utcnow().isoformat()}.png")
 
         img = ApexOCREngine.preprocess_image(img, blur_amount=3)
+        # For DEBUG
+        Image.fromarray(img).save(DATA_DIRECTORY / f"preprocessed_{datetime.utcnow().isoformat()}.png")
+
         text = pytesseract.image_to_string(img, config=TESSERACT_CONFIG)
         text = text.replace("\n", "").replace(" ", "").lower()
+
+        # For DEBUG
+        with open(DATA_DIRECTORY / f"text_{datetime.utcnow().isoformat()}.txt", "w+") as f:
+            f.write(text)
 
         if "summary" in text:
             if "xpbreakdown" in text:
