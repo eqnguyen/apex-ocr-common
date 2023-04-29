@@ -6,7 +6,7 @@ services:
     environment:
     - DISPLAY
     volumes:
-      - ./data:/home/apex/data
+      - ./data:/home/apex/apex-ocr/data
       - /tmp/.X11-unix:/tmp/.X11-unix:ro
       - /run/user/1001/pulse:/run/user/1001/pulse:ro
       - $HOME/.config/pulse:/usr/src/app/.config/pulse
