@@ -4,16 +4,27 @@ from pathlib import Path
 # Valid image extensions
 IMAGE_EXTENSIONS = [".jpg", ".jpeg", ".png"]
 
+from screeninfo import get_monitors
+
 # Path to stats file
 DATA_DIRECTORY = Path(__file__).parent.parent / "data"
 DATA_DIRECTORY.mkdir(parents=True, exist_ok=True)
-PERSONAL_STATS_FILE = DATA_DIRECTORY / "personal_stats.csv"
-SQUAD_STATS_FILE = DATA_DIRECTORY / "squad_stats.csv"
 
-# Bounding boxes for image grabs
-TOP_SCREEN = (0, 0, 1920, 250)
-PERSONAL_SQUAD_PLACED = (1450, 0, 1720, 200)
-XP_BREAKDOWN = (200, 200, 1024, 625)
+PERSONAL_STATS_FILE =  DATA_DIRECTORY / "personal_stats.csv"
+SQUAD_STATS_FILE = DATA_DIRECTORY / "squad_stats.csv"
+PERSONAL_STATS_FILE.touch()
+SQUAD_STATS_FILE.touch()
+
+for m in get_monitors():
+    primary_monitor = None
+    if m.is_primary:
+        primary_monitor = m
+        break
+
+TOP_SCREEN = (primary_monitor.x, primary_monitor.y, primary_monitor.x + primary_monitor.width, primary_monitor.y + primary_monitor.height)
+PERSONAL_SQUAD_PLACED = (primary_monitor.x + 1450, primary_monitor.y, primary_monitor.x + 1720/1920*primary_monitor.width, primary_monitor.y + 200/1080*primary_monitor.height)
+XP_BREAKDOWN = (primary_monitor.x + 200, primary_monitor.y + 200, primary_monitor.x + 1024/1920*primary_monitor.width, primary_monitor.y + 625/1080*primary_monitor.height)
+
 
 # Database output
 DATABASE = False
