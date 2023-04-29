@@ -1,6 +1,5 @@
 import csv
 import logging
-import winsound
 from typing import List
 
 from rich.align import Align
@@ -32,11 +31,28 @@ REPLACEMENTS = [
     ('"', ""),
 ]
 
+try:
+    import winsound
+except ImportError:
+    import os
+
+    def beep(beep_freq: int = 500, duration: float = .05, volume: float = .5) -> int:
+        return os.system(f"play -q -n -t alsa synth {duration} sine {beep_freq} vol {volume}")
+        
+    # test if beep is able to run
+    return_code = beep(volume=0)
+    if return_code == 32512:
+        logger.error(f"The package sox is not installed. Please install it ('sudo apt install sox')")
+    elif return_code != 0:
+        logger.error(f"sox appears to be installed, but there was some other problem with it {return_code=}")
+else:
+    def beep(beep_freq: int = 500, duration: float = .05, volume: float = .5) -> int:
+        return winsound.Beep(beep_freq, 500)
 
 def log_and_beep(print_text: str, beep_freq: int) -> None:
     logger.info(print_text)
     if beep_freq:
-        winsound.Beep(beep_freq, 500)
+        beep(beep_freq)
 
 
 def display_results(results: dict) -> None:
