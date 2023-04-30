@@ -2,8 +2,16 @@ FROM nvidia/cuda:10.2-base-ubuntu18.04
 
 RUN apt-get update && DEBIAN_FRONTEND=noninteractive TZ=Etc/UTC apt-get -y install tzdata
 
+#  CUDA Libs
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    cuda-cudart-11-8 \
+    cuda-cudart-dev-11-8 \
+    libcublas-12-1 \
+    libcublas-dev-12-1 \
+    libcudnn8 \
+    libcudnn8-dev
+
 RUN apt-get update && apt-get install -y \
-    python3-pip \
     libleptonica-dev \
     tesseract-ocr \
     libtesseract-dev \
@@ -16,7 +24,8 @@ RUN apt-get update && apt-get install -y \
     x11-xserver-utils \
     ffmpeg \
     libsm6 \
-    libxext6
+    libxext6 \
+    sox
 
 # Upgrade to Python 3.10
 RUN add-apt-repository ppa:deadsnakes/ppa && apt-get update
@@ -33,6 +42,8 @@ RUN python3 -m pip install opencv-python --verbose
 COPY --chown=apex requirements.txt .
 RUN pip3 install -r requirements.txt
 
+RUN python3 -m pip install paddlepaddle-gpu==2.5.0rc0
+
 # Create non root user
 RUN useradd -ms /bin/bash apex
 USER apex
@@ -44,28 +55,6 @@ RUN python3 /home/apex/cache_paddle.py
 
 # Copy program files
 COPY --chown=apex ./apex_ocr /home/apex/apex-ocr/apex_ocr
-COPY --chown=apex setup.py /home/apex/apex-ocr
-COPY --chown=apex README.md /home/apex/apex-ocr
-COPY --chown=apex requirements.txt /home/apex/apex-ocr
+ENV PYTHONPATH=/home/apex/apex-ocr:$PYTHONPATH
 
-USER root
-RUN python3 -m pip install -e /home/apex/apex-ocr
-
-
-RUN apt-get update && apt-get install -y --no-install-recommends \
-    libcudnn8 \
-    libcudnn8-dev
-
-RUN apt-get update && apt-get install -y --no-install-recommends \
-    sox \
-    cuda-cudart-11-8 cuda-cudart-dev-11-8
-
-RUN python3 -m pip install paddlepaddle-gpu==2.5.0rc0
-
-RUN apt-get update && apt-get install -y --no-install-recommends \
-    libcublas-12-1 \
-    libcublas-dev-12-1
-
-USER apex
-
-ENTRYPOINT [ "python3", "-m", "apex_ocr" ]
+ENTRYPOINT [ "python3", "apex-ocr/apex_ocr/__main__.py" ]
