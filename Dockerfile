@@ -39,8 +39,11 @@ WORKDIR /home/apex
 COPY --chown=apex cache_paddle.py /home/apex/
 RUN python3 /home/apex/cache_paddle.py
 
+RUN pip3 install joblib
+
 # Copy program files
 COPY --chown=apex ./apex_ocr /home/apex/apex-ocr/apex_ocr
 ENV PYTHONPATH=/home/apex/apex-ocr:$PYTHONPATH
 
 ENTRYPOINT [ "python3", "apex-ocr/apex_ocr/__main__.py" ]
+# ENTRYPOINT [ "python3", "apex-ocr/apex_ocr/__main__.py", "/home/apex/apex-ocr/data/input" ]
