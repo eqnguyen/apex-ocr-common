@@ -21,6 +21,9 @@ for m in get_monitors():
         primary_monitor = m
         break
 
+SUMMARY_ROI = (primary_monitor.width/3, 0, 2/3 * primary_monitor.width, primary_monitor.height/10)
+TOTAL_KILLS_ROI = (primary_monitor.width * 5/6, primary_monitor.height/10, primary_monitor.width, primary_monitor.height * 2/10)
+
 TOP_SCREEN = (primary_monitor.x, primary_monitor.y, primary_monitor.x + primary_monitor.width, primary_monitor.y + primary_monitor.height)
 PERSONAL_SQUAD_PLACED = (primary_monitor.x + 1450, primary_monitor.y, primary_monitor.x + 1720/1920*primary_monitor.width, primary_monitor.y + 200/1080*primary_monitor.height)
 XP_BREAKDOWN = (primary_monitor.x + 200, primary_monitor.y + 200, primary_monitor.x + 1024/1920*primary_monitor.width, primary_monitor.y + 625/1080*primary_monitor.height)
