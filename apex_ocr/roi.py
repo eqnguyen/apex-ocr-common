@@ -51,12 +51,12 @@ def scale_rois():
             ROI_VARS[key] = val/1920 * primary_monitor.width
         elif "COL" in key:
             # scale by width
-            ROI_VARS[key] = val/1920 * primary_monitor.width + primary_monitor.x
+            ROI_VARS[key] = val/1920 * primary_monitor.width
         elif "HEIGHT" in key:
             ROI_VARS[key] = val/1080 * primary_monitor.height
         elif "ROW" in key:
             # scale by height
-            ROI_VARS[key] = val/1080 * primary_monitor.height + primary_monitor.y
+            ROI_VARS[key] = val/1080 * primary_monitor.height
         else:
             logger.error(f"Unknown var: {key}")
 
@@ -197,7 +197,18 @@ ROI_DICT["p3"]["respawns"] = (
 )
 
 
-def get_rois(img: Image) -> Tuple[np.ndarray, np.ndarray, dict]:
+def get_rois(img: Image, debug: bool = False) -> Tuple[np.ndarray, np.ndarray, dict]:
+    if debug:
+        from apex_ocr.config import DATA_DIRECTORY
+        from datetime import datetime
+        from PIL import ImageDraw
+
+        draw = ImageDraw.Draw(img)
+        draw.rectangle([0, 0, 50, 50], width=3)
+        draw.rectangle(SQUAD_PLACE_ROI, width=3)
+        draw.rectangle(TOTAL_KILLS_ROI, width=3)
+        img.save(DATA_DIRECTORY / f"rois_img_{datetime.utcnow().isoformat()}.png")
+
     squad_place = np.array(img.crop(SQUAD_PLACE_ROI))
     total_kill = np.array(img.crop(TOTAL_KILLS_ROI))
 
