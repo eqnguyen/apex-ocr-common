@@ -50,6 +50,22 @@ COPY --chown=apex requirements.txt /home/apex/apex-ocr
 
 USER root
 RUN python3 -m pip install -e /home/apex/apex-ocr
+
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    libcudnn8 \
+    libcudnn8-dev
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    sox \
+    cuda-cudart-11-8 cuda-cudart-dev-11-8
+
+RUN python3 -m pip install paddlepaddle-gpu==2.5.0rc0
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    libcublas-12-1 \
+    libcublas-dev-12-1
+
 USER apex
 
 ENTRYPOINT [ "python3", "-m", "apex_ocr" ]
