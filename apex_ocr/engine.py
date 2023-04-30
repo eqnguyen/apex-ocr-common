@@ -163,7 +163,7 @@ class ApexOCREngine:
         return text
 
     def process_squad_summary_page(
-        self, image: Union[Path, np.ndarray, None] = None
+        self, image: Union[Path, np.ndarray, None] = None, debug:bool = False
     ) -> dict:
         if image:
             if isinstance(image, np.ndarray):
@@ -172,7 +172,7 @@ class ApexOCREngine:
                 dup_images = [Image.open(image)] * self.num_images
         else:
             # Take duplicate images immediately to get the most common interpretation
-            dup_images = [ImageGrab.grab() for _ in range(self.num_images)]
+            dup_images = [ImageGrab.grab(bbox=TOP_SCREEN) for _ in range(self.num_images)]
 
         results_dict = defaultdict(None)
         results_dict["Datetime"] = datetime.now()
@@ -180,6 +180,9 @@ class ApexOCREngine:
 
         if debug:
             dup_images[0].save(DATA_DIRECTORY / f"dup_image_{datetime.utcnow().isoformat()}.png")
+        else:
+            # Magic: Important when running in docker with joblib
+            dup_images[0].load()
 
         log_and_beep("Processing squad summary...", 1500)
         from joblib import parallel_backend, Parallel, delayed
