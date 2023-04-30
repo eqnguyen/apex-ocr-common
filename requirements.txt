@@ -103,7 +103,7 @@ rarfile==4.0
 requests==2.28.2
 rich==13.3.4
 scikit-image==0.20.0
-scipy==1.10.1
+scipy==1.9.1
 screeninfo==0.8.1
 semantic-version==2.10.0
 shapely==2.0.1
