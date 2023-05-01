@@ -171,3 +171,5 @@ db.yml
 
 # UML project files
 *.mdj
+
+.paddleocr/

@@ -3,7 +3,7 @@ import logging
 import re
 from collections import Counter, defaultdict
 from datetime import datetime
-from typing import List, Tuple, Union
+from typing import DefaultDict, List, Tuple, Union
 
 import numpy as np
 import pytesseract
@@ -79,33 +79,71 @@ class ApexOCREngine:
 
     @staticmethod
     def classify_summary_page(
-        image: Union[Path, np.ndarray, None] = None
+        image: Union[Path, np.ndarray, None] = None, debug: bool = False
     ) -> Union[SummaryType, None]:
         if image:
             if isinstance(image, np.ndarray):
-                img = image
+                image = Image.fromarray(image)
             elif isinstance(image, Path):
-                img = cv2.imread(str(image))
+                image = Image.open(str(image))
         else:
-            img = np.array(ImageGrab.grab(bbox=TOP_SCREEN))
+            image = ImageGrab.grab(bbox=TOP_SCREEN)
 
-        img = ApexOCREngine.preprocess_image(img, blur_amount=3)
-        text = pytesseract.image_to_string(img, config=TESSERACT_CONFIG)
-        text = text.replace("\n", "").replace(" ", "").lower()
+        total_kills_img = np.array(image.crop(TOTAL_KILLS_ROI))
+        summary_img = np.array(image.crop(SUMMARY_ROI))
 
-        if "summary" in text:
-            if "xpbreakdown" in text:
+        if debug:
+            image.save(
+                DATA_DIRECTORY
+                / f"raw_{datetime.utcnow().strftime('%Y-%m-%d_%H-%M-%S')}.png"
+            )
+
+        total_kills_img = ApexOCREngine.preprocess_image(total_kills_img, blur_amount=3)
+        summary_img = ApexOCREngine.preprocess_image(summary_img, blur_amount=3)
+
+        if debug:
+            Image.fromarray(total_kills_img).save(
+                DATA_DIRECTORY
+                / f"preprocessed_{datetime.utcnow().strftime('%Y-%m-%d_%H-%M-%S')}.png"
+            )
+
+        summary_text = pytesseract.image_to_string(summary_img, config=TESSERACT_CONFIG)
+        summary_text = summary_text.replace("\n", "").replace(" ", "").lower()
+
+        kills_text = pytesseract.image_to_string(
+            total_kills_img, config=TESSERACT_CONFIG
+        )
+        kills_text = kills_text.replace("\n", "").replace(" ", "").lower()
+
+        if debug:
+            with open(
+                DATA_DIRECTORY
+                / f"text_{datetime.utcnow().strftime('%Y-%m-%d_%H-%M-%S')}.txt",
+                "w+",
+            ) as f:
+                f.write(f"{summary_text}\n{kills_text}")
+
+        if "summary" in summary_text:
+            if "xpbreakdown" in kills_text:
                 return SummaryType.PERSONAL
-            elif "totalkills" in text:
+            elif "totalkills" in kills_text:
                 return SummaryType.SQUAD
-        else:
-            return None
+
+        return None
 
     @staticmethod
     def text_from_image_tesseract(
-        image: np.ndarray, blur_amount: int, config: str = TESSERACT_CONFIG
+        image: np.ndarray,
+        blur_amount: int,
+        config: str = TESSERACT_CONFIG,
+        debug: bool = False,
     ) -> str:
         img = ApexOCREngine.preprocess_image(image, blur_amount)
+        if debug:
+            Image.fromarray(img).save(
+                DATA_DIRECTORY
+                / f"roi_preprocessed_{datetime.utcnow().strftime('%Y-%m-%d_%H-%M-%S')}.png"
+            )
         text = pytesseract.image_to_string(img, config=config)
         text = text.replace("\n", "").replace(" ", "").lower()
         return text
@@ -143,7 +181,7 @@ class ApexOCREngine:
         return text
 
     def process_squad_summary_page(
-        self, image: Union[Path, np.ndarray, None] = None
+        self, image: Union[Path, np.ndarray, None] = None, debug: bool = False
     ) -> dict:
         if image:
             if isinstance(image, np.ndarray):
@@ -152,97 +190,37 @@ class ApexOCREngine:
                 dup_images = [Image.open(image)] * self.num_images
         else:
             # Take duplicate images immediately to get the most common interpretation
-            dup_images = [ImageGrab.grab() for _ in range(self.num_images)]
+            dup_images = [
+                ImageGrab.grab(bbox=TOP_SCREEN) for _ in range(self.num_images)
+            ]
 
         results_dict = defaultdict(None)
         results_dict["Datetime"] = datetime.now()
         matches = defaultdict(list)
 
-        log_and_beep("Processing squad summary...", 1500)
-
-        # OCR for all the images captured, then assign interpretation to the associated stat
-        for img, blur_amount in zip(dup_images, self.blurs):
-            # Get regions of interest
-            squad_place, total_kills, players = get_rois(img)
-
-            # Get text from the images
-            place_text = self.text_from_image_tesseract(squad_place, blur_amount)
-            total_kills_text = self.text_from_image_tesseract(
-                total_kills, blur_amount, TESSERACT_BLOCK_CONFIG
+        if debug:
+            dup_images[0].save(
+                DATA_DIRECTORY
+                / f"dup_image_{datetime.utcnow().strftime('%Y-%m-%d_%H-%M-%S')}.png"
             )
+        else:
+            # Magic: Important when running in docker with joblib
+            dup_images[0].load()
 
-            for header in SQUAD_SUMMARY_HEADERS:
-                if header == "Datetime":
-                    continue
-                elif header == "Place":
-                    matches[header].extend(
-                        replace_nondigits(SQUAD_SUMMARY_MAP[header].findall(place_text))
-                    )
-                elif header == "Squad Kills":
-                    matches[header].extend(
-                        replace_nondigits(
-                            SQUAD_SUMMARY_MAP[header].findall(total_kills_text)
-                        )
-                    )
-                else:
-                    # Player section
-                    player = header.split(" ")[0].lower()
+        log_and_beep("Processing squad summary...", 1500)
+        from joblib import parallel_backend, Parallel, delayed
 
-                    if " " not in header:
-                        matches[header].append(
-                            self.text_from_image_paddleocr(
-                                players[player]["player"],
-                                blur_amount,
-                            )
-                        )
-                    else:
-                        category = header.split(" ")[1].lower()
-
-                        if category == "kills":
-                            kakn_text = self.text_from_image_paddleocr(
-                                players[player]["kakn"], blur_amount
-                            )
-                            if (
-                                len(kakn_text) == 5
-                                and re.search(r"\d+/\d+/\d+", kakn_text) is None
-                            ):
-                                kakn_text = "/".join(
-                                    [kakn_text[0], kakn_text[2], kakn_text[4]]
-                                )
-
-                            kills, assists, knocks = self.process_kakn(kakn_text)
-
-                            matches[player.upper() + " Kills"].append(kills)
-                            matches[player.upper() + " Assists"].append(assists)
-                            matches[player.upper() + " Knocks"].append(knocks)
-                        elif category == "assists":
-                            continue
-                        elif category == "knocks":
-                            continue
-                        elif category == "damage":
-                            matches[header].append(
-                                self.text_from_image_paddleocr(
-                                    players[player]["damage"], blur_amount
-                                )
-                            )
-                        elif category == "time":
-                            time_text = self.text_from_image_paddleocr(
-                                players[player]["survival_time"], blur_amount
-                            )
-                            if len(time_text) >= 3 and ":" not in time_text:
-                                time_text = ":".join([time_text[:-2], time_text[-2:]])
-                            matches[header].append(time_text)
-                        elif category == "revives":
-                            revive_text = self.text_from_image_paddleocr(
-                                players[player]["revives"], blur_amount
-                            )
-                            matches[header].append(revive_text)
-                        elif category == "respawns":
-                            respawn_text = self.text_from_image_paddleocr(
-                                players[player]["respawns"],
-                                blur_amount,
-                            )
-                            matches[header].append(respawn_text)
+        with parallel_backend(
+            "threading", n_jobs=len(self.blurs)
+        ):  # , require='sharedmem'):
+            # job_args = [[img, blur_amount, matches] for img, blur_amount in zip(dup_images, self.blurs)]
+            # OCR for all the images captured, then assign interpretation to the associated stat
+            Parallel()(
+                delayed(self.process_squad_summary_page_helper)(
+                    img, blur_amount, matches
+                )
+                for img, blur_amount in zip(dup_images, self.blurs)
+            )
 
         # For each image, find the most common OCR text interpretation for each stat
         # If no available interpretations of the stat, assign the value "n/a"
@@ -261,6 +239,112 @@ class ApexOCREngine:
         )
 
         return results_dict
+
+    def process_squad_summary_page_helper(
+        self, img: Image, blur_amount: int, matches: DefaultDict, debug: bool = False
+    ):
+        if img is None:
+            logger.error(f"img is None")
+            exit(1)
+        # Get regions of interest
+        squad_place, total_kills, players = get_rois(img)
+
+        if debug:
+            img.save(
+                DATA_DIRECTORY
+                / f"img_{datetime.utcnow().strftime('%Y-%m-%d_%H-%M-%S')}.png"
+            )
+            Image.fromarray(squad_place).save(
+                DATA_DIRECTORY
+                / f"squad_place_{datetime.utcnow().strftime('%Y-%m-%d_%H-%M-%S')}.png"
+            )
+            Image.fromarray(total_kills).save(
+                DATA_DIRECTORY
+                / f"total_kills_{datetime.utcnow().strftime('%Y-%m-%d_%H-%M-%S')}.png"
+            )
+            Image.fromarray(squad_place).save(
+                DATA_DIRECTORY
+                / f"squad_place_{datetime.utcnow().strftime('%Y-%m-%d_%H-%M-%S')}.png"
+            )
+
+        # Get text from the images
+        place_text = self.text_from_image_tesseract(squad_place, blur_amount)
+        total_kills_text = self.text_from_image_tesseract(
+            total_kills, blur_amount, TESSERACT_BLOCK_CONFIG
+        )
+
+        for header in SQUAD_SUMMARY_HEADERS:
+            if header == "Datetime":
+                continue
+            elif header == "Place":
+                matches[header].extend(
+                    replace_nondigits(SQUAD_SUMMARY_MAP[header].findall(place_text))
+                )
+            elif header == "Squad Kills":
+                matches[header].extend(
+                    replace_nondigits(
+                        SQUAD_SUMMARY_MAP[header].findall(total_kills_text)
+                    )
+                )
+            else:
+                # Player section
+                player = header.split(" ")[0].lower()
+
+                if " " not in header:
+                    matches[header].append(
+                        self.text_from_image_paddleocr(
+                            players[player]["player"],
+                            blur_amount,
+                        )
+                    )
+                else:
+                    category = header.split(" ")[1].lower()
+
+                    if category == "kills":
+                        kakn_text = self.text_from_image_paddleocr(
+                            players[player]["kakn"], blur_amount
+                        )
+                        if (
+                            len(kakn_text) == 5
+                            and re.search(r"\d+/\d+/\d+", kakn_text) is None
+                        ):
+                            kakn_text = "/".join(
+                                [kakn_text[0], kakn_text[2], kakn_text[4]]
+                            )
+
+                        kills, assists, knocks = self.process_kakn(kakn_text)
+
+                        matches[player.upper() + " Kills"].append(kills)
+                        matches[player.upper() + " Assists"].append(assists)
+                        matches[player.upper() + " Knocks"].append(knocks)
+                    elif category == "assists":
+                        continue
+                    elif category == "knocks":
+                        continue
+                    elif category == "damage":
+                        matches[header].append(
+                            self.text_from_image_paddleocr(
+                                players[player]["damage"], blur_amount
+                            )
+                        )
+                    elif category == "time":
+                        time_text = self.text_from_image_paddleocr(
+                            players[player]["survival_time"], blur_amount
+                        )
+                        if len(time_text) >= 3 and ":" not in time_text:
+                            time_text = ":".join([time_text[:-2], time_text[-2:]])
+                        matches[header].append(time_text)
+                    elif category == "revives":
+                        revive_text = self.text_from_image_paddleocr(
+                            players[player]["revives"], blur_amount
+                        )
+                        matches[header].append(revive_text)
+                    elif category == "respawns":
+                        respawn_text = self.text_from_image_paddleocr(
+                            players[player]["respawns"],
+                            blur_amount,
+                        )
+                        matches[header].append(respawn_text)
 
     def process_personal_summary_page(
         self, image: Union[Path, np.ndarray, None] = None
