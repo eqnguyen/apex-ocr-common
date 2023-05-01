@@ -1,6 +1,7 @@
 import logging
 import time
 import traceback
+from PIL import Image
 
 import click
 from rich.logging import RichHandler
@@ -17,6 +18,7 @@ from rich.progress import (
 from apex_ocr.config import *
 from apex_ocr.engine import ApexOCREngine
 from apex_ocr.utils import *
+from apex_ocr.roi import scale_rois
 
 logging.captureWarnings(True)
 logger = logging.getLogger(__name__)
@@ -52,6 +54,8 @@ def main(filepath: str):
         ) as pb:
             task1 = pb.add_task("Processing screenshots...", total=len(file_list))
 
+            #  Assumes all files are the same size
+            scale_rois(Image.open(file_list[0]).size)
             for screenshot_path in file_list:
                 logger.info(f"Performing OCR on {screenshot_path.name}...")
                 ocr_engine.process_screenshot(screenshot_path)
@@ -59,6 +63,7 @@ def main(filepath: str):
                 pb.update(task1, advance=1)
 
     else:
+        scale_rois()
         logger.info("Watching screen...")
 
         while True:
@@ -70,7 +75,7 @@ def main(filepath: str):
 if __name__ == "__main__":
     # Configure logger
     logging.basicConfig(
-        level=logging.DEBUG,
+        level=logging.INFO,
         format=" %(name)s | %(message)s",
         datefmt="%Y-%m-%d %H:%M:%S",
         force=True,
