@@ -188,6 +188,7 @@ class ApexOCREngine:
                     continue
                 else:
                     # Player section
+                    # TODO: Remove arbitrary player order in results
                     player = header.split(" ")[0].lower()
 
                     if " " not in header:
@@ -336,21 +337,12 @@ class ApexOCREngine:
             # output_path = PERSONAL_STATS_FILE
             # headers = PERSONAL_SUMMARY_HEADERS
 
-            # if not equal_dicts(last_personal_results, results_dict, ["Datetime"]):
-            #     last_personal_results = results_dict.copy()
-            #     new_result = True
-
             pass
 
         elif summary_type == SummaryType.SQUAD:
             results_dict = self.process_squad_summary_page(image)
             output_path = SQUAD_STATS_FILE
             headers = SQUAD_SUMMARY_HEADERS
-
-            # TODO: Fix check for existing results
-            # if not equal_dicts(last_squad_results, results_dict, ["Datetime"]):
-            #     last_squad_results = results_dict.copy()
-            #     new_result = True
 
         else:
             logger.warning("Unknown summary page detected")

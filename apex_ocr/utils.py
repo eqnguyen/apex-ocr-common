@@ -154,6 +154,8 @@ def write_to_file(filepath: Path, headers: List[str], data: dict) -> bool:
         write_method = "w"
         rows_to_write = [headers, value_list]
 
+    # TODO: Parse file for duplicate hash
+
     with open(filepath, write_method, newline="") as f:
         writer = csv.writer(f)
         for row in rows_to_write:
