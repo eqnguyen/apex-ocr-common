@@ -93,13 +93,13 @@ class ApexOCREngine:
         summary_img = np.array(image.crop(SUMMARY_ROI))
 
         if debug:
-            image.save(DATA_DIRECTORY / f"raw_{datetime.utcnow().isoformat()}.png")
+            image.save(DATA_DIRECTORY / f"raw_{datetime.utcnow().strftime('%Y-%m-%d_%H-%M-%S')}.png")
 
         total_kills_img = ApexOCREngine.preprocess_image(total_kills_img, blur_amount=3)
         summary_img = ApexOCREngine.preprocess_image(summary_img, blur_amount=3)
         
         if debug:
-            Image.fromarray(total_kills_img).save(DATA_DIRECTORY / f"preprocessed_{datetime.utcnow().isoformat()}.png")
+            Image.fromarray(total_kills_img).save(DATA_DIRECTORY / f"preprocessed_{datetime.utcnow().strftime('%Y-%m-%d_%H-%M-%S')}.png")
 
         summary_text = pytesseract.image_to_string(summary_img, config=TESSERACT_CONFIG)
         summary_text = summary_text.replace("\n", "").replace(" ", "").lower()
@@ -108,7 +108,7 @@ class ApexOCREngine:
         kills_text = kills_text.replace("\n", "").replace(" ", "").lower()
 
         if debug:
-            with open(DATA_DIRECTORY / f"text_{datetime.utcnow().isoformat()}.txt", "w+") as f:
+            with open(DATA_DIRECTORY / f"text_{datetime.utcnow().strftime('%Y-%m-%d_%H-%M-%S')}.txt", "w+") as f:
                 f.write(f"{summary_text}\n{kills_text}")
 
         if "summary" in summary_text:
@@ -125,7 +125,7 @@ class ApexOCREngine:
     ) -> str:
         img = ApexOCREngine.preprocess_image(image, blur_amount)
         if debug:
-            Image.fromarray(img).save(DATA_DIRECTORY / f"roi_preprocessed_{datetime.utcnow().isoformat()}.png")
+            Image.fromarray(img).save(DATA_DIRECTORY / f"roi_preprocessed_{datetime.utcnow().strftime('%Y-%m-%d_%H-%M-%S')}.png")
         text = pytesseract.image_to_string(img, config=config)
         text = text.replace("\n", "").replace(" ", "").lower()
         return text
@@ -179,7 +179,7 @@ class ApexOCREngine:
         matches = defaultdict(list)
 
         if debug:
-            dup_images[0].save(DATA_DIRECTORY / f"dup_image_{datetime.utcnow().isoformat()}.png")
+            dup_images[0].save(DATA_DIRECTORY / f"dup_image_{datetime.utcnow().strftime('%Y-%m-%d_%H-%M-%S')}.png")
         else:
             # Magic: Important when running in docker with joblib
             dup_images[0].load()
@@ -218,10 +218,10 @@ class ApexOCREngine:
         squad_place, total_kills, players = get_rois(img)
         
         if debug:
-            img.save(DATA_DIRECTORY / f"img_{datetime.utcnow().isoformat()}.png")
-            Image.fromarray(squad_place).save(DATA_DIRECTORY / f"squad_place_{datetime.utcnow().isoformat()}.png")
-            Image.fromarray(total_kills).save(DATA_DIRECTORY / f"total_kills_{datetime.utcnow().isoformat()}.png")
-            Image.fromarray(squad_place).save(DATA_DIRECTORY / f"squad_place_{datetime.utcnow().isoformat()}.png")
+            img.save(DATA_DIRECTORY / f"img_{datetime.utcnow().strftime('%Y-%m-%d_%H-%M-%S')}.png")
+            Image.fromarray(squad_place).save(DATA_DIRECTORY / f"squad_place_{datetime.utcnow().strftime('%Y-%m-%d_%H-%M-%S')}.png")
+            Image.fromarray(total_kills).save(DATA_DIRECTORY / f"total_kills_{datetime.utcnow().strftime('%Y-%m-%d_%H-%M-%S')}.png")
+            Image.fromarray(squad_place).save(DATA_DIRECTORY / f"squad_place_{datetime.utcnow().strftime('%Y-%m-%d_%H-%M-%S')}.png")
 
         # Get text from the images
         place_text = self.text_from_image_tesseract(squad_place, blur_amount)
