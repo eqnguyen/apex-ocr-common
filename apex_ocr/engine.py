@@ -364,9 +364,6 @@ class ApexOCREngine:
             output_path = SQUAD_STATS_FILE
             headers = SQUAD_SUMMARY_HEADERS
 
-        else:
-            logger.warning("Unknown summary page detected")
-
         if results_dict:
             results_dict["Hash"] = dict_hash(results_dict, ["Datetime"])
             display_results(results_dict)

@@ -69,7 +69,6 @@ def main(filepath: str):
         while True:
             ocr_engine.process_screenshot()
             time.sleep(3)
-            logger.info("Watching screen...")
 
 
 if __name__ == "__main__":
