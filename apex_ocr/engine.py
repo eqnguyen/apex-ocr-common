@@ -16,6 +16,7 @@ from apex_ocr.database.api import ApexDatabaseApi
 from apex_ocr.preprocessing import *
 from apex_ocr.roi import get_rois
 from apex_ocr.utils import *
+import re
 
 logger = logging.getLogger(__name__)
 
@@ -51,6 +52,7 @@ class ApexOCREngine:
 
     @staticmethod
     def process_kakn(text: str) -> Tuple[int, int, int]:
+        text = re.sub("[^0-9/]", "", text)
         parts = text.split("/")
 
         if len(parts) == 3:
