@@ -12,8 +12,6 @@ DATA_DIRECTORY.mkdir(parents=True, exist_ok=True)
 
 PERSONAL_STATS_FILE =  DATA_DIRECTORY / "personal_stats.csv"
 SQUAD_STATS_FILE = DATA_DIRECTORY / "squad_stats.csv"
-PERSONAL_STATS_FILE.touch()
-SQUAD_STATS_FILE.touch()
 
 for m in get_monitors():
     primary_monitor = None
