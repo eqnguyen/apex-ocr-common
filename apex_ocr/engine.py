@@ -126,6 +126,7 @@ class ApexOCREngine:
                 f.write(f"{summary_text}\n{kills_text}")
 
         if "summary" in summary_text:
+            # TODO: Classify different categories of squad summary
             if "xpbreakdown" in kills_text:
                 return SummaryType.PERSONAL
             elif "totalkills" in kills_text:
@@ -289,7 +290,7 @@ class ApexOCREngine:
                     )
                 )
             elif header == "Hash":
-                    continue
+                continue
             else:
                 # Player section
                 # TODO: Remove arbitrary player order in results
@@ -351,78 +352,11 @@ class ApexOCREngine:
                         )
                         matches[header].append(respawn_text)
 
-    def process_personal_summary_page(
-        self, image: Union[Path, np.ndarray, None] = None
-    ) -> dict:
-        if image:
-            if isinstance(image, np.ndarray):
-                dup_images = [Image.fromarray(image)] * self.num_images
-            elif isinstance(image, Path):
-                dup_images = [Image.open(image)] * self.num_images
-        else:
-            # Take duplicate images immediately to get the most common interpretation
-            dup_images = [ImageGrab.grab() for _ in range(self.num_images)]
-
-        place_images = [np.array(img.crop(PERSONAL_SQUAD_PLACED)) for img in dup_images]
-        xp_images = [np.array(img.crop(XP_BREAKDOWN)) for img in dup_images]
-
-        results_dict = defaultdict(None)
-        results_dict["Datetime"] = datetime.now()
-        matches = defaultdict(list)
-
-        log_and_beep("Processing personal summary...", 1500)
-
-        # OCR for all the images captured, then assign interpretation to the associated stat
-        for place_image, xp_image, blur_amount in zip(
-            place_images, xp_images, self.blurs
-        ):
-            # Get text from the images
-            place_text = self.text_from_image_paddleocr(place_image, blur_amount)
-            xp_text = self.text_from_image_tesseract(xp_image, blur_amount)
-
-            # Concatenate the image text
-            text = place_text + xp_text
-
-            logger.debug(f"Image text, blur={blur_amount}: {text}")
-
-            for header, matcher in PERSONAL_SUMMARY_MAP.items():
-                if header == "Time Survived":
-                    parsed_text = self.process_time_survived(matcher.findall(text))
-                else:
-                    parsed_text = replace_nondigits(matcher.findall(text))
-                matches[header].extend(parsed_text)
-
-        # For each image, find the most common OCR text interpretation for each stat
-        # If no available interpretations of the stat, assign the value "n/a"
-        for k, v in matches.items():
-            counts = Counter(v)
-            most_common = counts.most_common(1)
-
-            if len(most_common) > 0:
-                results_dict[k] = most_common[0][0]
-            else:
-                results_dict[k] = "n/a"
-
-        log_and_beep(
-            f"Finished processing images: {results_dict}",
-            1000,
-        )
-
-        return results_dict
-
     def process_screenshot(self, image: Union[Path, np.ndarray, None] = None) -> None:
         summary_type = ApexOCREngine.classify_summary_page(image)
         results_dict = {}
 
         if summary_type == SummaryType.PERSONAL:
-            # Skip personal summary page since all this information is contained on the squad
-            # summary. Uncomment this section and remove "continue" if you'd like to process
-            # this page.
-
-            # results_dict = self.process_personal_summary_page(image)
-            # output_path = PERSONAL_STATS_FILE
-            # headers = PERSONAL_SUMMARY_HEADERS
-
             pass
 
         elif summary_type == SummaryType.SQUAD:
@@ -434,7 +368,6 @@ class ApexOCREngine:
             logger.warning("Unknown summary page detected")
 
         if results_dict:
-            # TODO: Handle personal results dictionary
             results_dict["Hash"] = dict_hash(results_dict, ["Datetime"])
             display_results(results_dict)
 
