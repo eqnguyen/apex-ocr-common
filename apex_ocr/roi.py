@@ -22,26 +22,24 @@ ROI_VARS = {
     "SURV_TIME_ROW_START": 556,
     "REV_ROW_START": 632,
     "RES_ROW_START": 708,
-
     "TOP_ROW_HEIGHT": 62,
     "PLAYER_ROW_HEIGHT": 32,
-
     "SQUAD_PLACE_COL_START": 1345,
     "TOTAL_KILL_COL_START": 1600,
     "P1_COL_START": 125,
     "P2_COL_START": 725,
     "P3_COL_START": 1325,
-
     "SQUAD_PLACE_WIDTH": 255,
     "TOTAL_KILL_WIDTH": 220,
     "PLAYER_WIDTH": 215,
     "KAKN_WIDTH": 150,
     "DAMAGE_WIDTH": 130,
     "SURV_TIME_WIDTH": 130,
-    "REV_RES_WIDTH": 60
+    "REV_RES_WIDTH": 60,
 }
 
-def scale_rois(resolution: Tuple[int, int]=None):
+
+def scale_rois(resolution: Tuple[int, int] = None):
     # resolution means we are analyzing screenshot(s)
     if resolution:
         width, height = resolution
@@ -54,22 +52,23 @@ def scale_rois(resolution: Tuple[int, int]=None):
                 break
 
         width, height = primary_monitor.width, primary_monitor.height
-    
+
     for key, val in ROI_VARS.items():
         if "WIDTH" in key:
-            ROI_VARS[key] = val/1920 * width
+            ROI_VARS[key] = val / 1920 * width
         elif "COL" in key:
             # scale by width
-            ROI_VARS[key] = val/1920 * width
+            ROI_VARS[key] = val / 1920 * width
         elif "HEIGHT" in key:
-            ROI_VARS[key] = val/1080 * height
+            ROI_VARS[key] = val / 1080 * height
         elif "ROW" in key:
             # scale by height
-            ROI_VARS[key] = val/1080 * height
+            ROI_VARS[key] = val / 1080 * height
         else:
             logger.error(f"Unknown var: {key}")
-    
+
     calculate_rois()
+
 
 def calculate_rois():
     global SQUAD_PLACE_ROI, TOTAL_KILLS_ROI, ROI_DICT
@@ -207,6 +206,7 @@ def calculate_rois():
         ROI_VARS["RES_ROW_START"] + ROI_VARS["PLAYER_ROW_HEIGHT"],
     )
 
+
 def get_rois(img: Image, debug: bool = False) -> Tuple[np.ndarray, np.ndarray, dict]:
     if debug:
         from apex_ocr.config import DATA_DIRECTORY
@@ -217,7 +217,10 @@ def get_rois(img: Image, debug: bool = False) -> Tuple[np.ndarray, np.ndarray, d
         draw.rectangle([0, 0, 50, 50], width=3)
         draw.rectangle(SQUAD_PLACE_ROI, width=3)
         draw.rectangle(TOTAL_KILLS_ROI, width=3)
-        img.save(DATA_DIRECTORY / f"rois_img_{datetime.utcnow().strftime('%Y-%m-%d_%H-%M-%S')}.png")
+        img.save(
+            DATA_DIRECTORY
+            / f"rois_img_{datetime.utcnow().strftime('%Y-%m-%d_%H-%M-%S')}.png"
+        )
 
     squad_place = np.array(img.crop(SQUAD_PLACE_ROI))
     total_kill = np.array(img.crop(TOTAL_KILLS_ROI))

@@ -79,7 +79,7 @@ class ApexOCREngine:
 
     @staticmethod
     def classify_summary_page(
-        image: Union[Path, np.ndarray, None] = None, debug:bool = False
+        image: Union[Path, np.ndarray, None] = None, debug: bool = False
     ) -> Union[SummaryType, None]:
         if image:
             if isinstance(image, np.ndarray):
@@ -88,27 +88,39 @@ class ApexOCREngine:
                 image = Image.open(str(image))
         else:
             image = ImageGrab.grab(bbox=TOP_SCREEN)
-        
+
         total_kills_img = np.array(image.crop(TOTAL_KILLS_ROI))
         summary_img = np.array(image.crop(SUMMARY_ROI))
 
         if debug:
-            image.save(DATA_DIRECTORY / f"raw_{datetime.utcnow().strftime('%Y-%m-%d_%H-%M-%S')}.png")
+            image.save(
+                DATA_DIRECTORY
+                / f"raw_{datetime.utcnow().strftime('%Y-%m-%d_%H-%M-%S')}.png"
+            )
 
         total_kills_img = ApexOCREngine.preprocess_image(total_kills_img, blur_amount=3)
         summary_img = ApexOCREngine.preprocess_image(summary_img, blur_amount=3)
-        
+
         if debug:
-            Image.fromarray(total_kills_img).save(DATA_DIRECTORY / f"preprocessed_{datetime.utcnow().strftime('%Y-%m-%d_%H-%M-%S')}.png")
+            Image.fromarray(total_kills_img).save(
+                DATA_DIRECTORY
+                / f"preprocessed_{datetime.utcnow().strftime('%Y-%m-%d_%H-%M-%S')}.png"
+            )
 
         summary_text = pytesseract.image_to_string(summary_img, config=TESSERACT_CONFIG)
         summary_text = summary_text.replace("\n", "").replace(" ", "").lower()
 
-        kills_text = pytesseract.image_to_string(total_kills_img, config=TESSERACT_CONFIG)
+        kills_text = pytesseract.image_to_string(
+            total_kills_img, config=TESSERACT_CONFIG
+        )
         kills_text = kills_text.replace("\n", "").replace(" ", "").lower()
 
         if debug:
-            with open(DATA_DIRECTORY / f"text_{datetime.utcnow().strftime('%Y-%m-%d_%H-%M-%S')}.txt", "w+") as f:
+            with open(
+                DATA_DIRECTORY
+                / f"text_{datetime.utcnow().strftime('%Y-%m-%d_%H-%M-%S')}.txt",
+                "w+",
+            ) as f:
                 f.write(f"{summary_text}\n{kills_text}")
 
         if "summary" in summary_text:
@@ -116,16 +128,22 @@ class ApexOCREngine:
                 return SummaryType.PERSONAL
             elif "totalkills" in kills_text:
                 return SummaryType.SQUAD
-        
+
         return None
 
     @staticmethod
     def text_from_image_tesseract(
-        image: np.ndarray, blur_amount: int, config: str = TESSERACT_CONFIG, debug: bool = False
+        image: np.ndarray,
+        blur_amount: int,
+        config: str = TESSERACT_CONFIG,
+        debug: bool = False,
     ) -> str:
         img = ApexOCREngine.preprocess_image(image, blur_amount)
         if debug:
-            Image.fromarray(img).save(DATA_DIRECTORY / f"roi_preprocessed_{datetime.utcnow().strftime('%Y-%m-%d_%H-%M-%S')}.png")
+            Image.fromarray(img).save(
+                DATA_DIRECTORY
+                / f"roi_preprocessed_{datetime.utcnow().strftime('%Y-%m-%d_%H-%M-%S')}.png"
+            )
         text = pytesseract.image_to_string(img, config=config)
         text = text.replace("\n", "").replace(" ", "").lower()
         return text
@@ -163,7 +181,7 @@ class ApexOCREngine:
         return text
 
     def process_squad_summary_page(
-        self, image: Union[Path, np.ndarray, None] = None, debug:bool = False
+        self, image: Union[Path, np.ndarray, None] = None, debug: bool = False
     ) -> dict:
         if image:
             if isinstance(image, np.ndarray):
@@ -172,14 +190,19 @@ class ApexOCREngine:
                 dup_images = [Image.open(image)] * self.num_images
         else:
             # Take duplicate images immediately to get the most common interpretation
-            dup_images = [ImageGrab.grab(bbox=TOP_SCREEN) for _ in range(self.num_images)]
+            dup_images = [
+                ImageGrab.grab(bbox=TOP_SCREEN) for _ in range(self.num_images)
+            ]
 
         results_dict = defaultdict(None)
         results_dict["Datetime"] = datetime.now()
         matches = defaultdict(list)
 
         if debug:
-            dup_images[0].save(DATA_DIRECTORY / f"dup_image_{datetime.utcnow().strftime('%Y-%m-%d_%H-%M-%S')}.png")
+            dup_images[0].save(
+                DATA_DIRECTORY
+                / f"dup_image_{datetime.utcnow().strftime('%Y-%m-%d_%H-%M-%S')}.png"
+            )
         else:
             # Magic: Important when running in docker with joblib
             dup_images[0].load()
@@ -187,10 +210,17 @@ class ApexOCREngine:
         log_and_beep("Processing squad summary...", 1500)
         from joblib import parallel_backend, Parallel, delayed
 
-        with parallel_backend("threading", n_jobs=len(self.blurs)):#, require='sharedmem'):
+        with parallel_backend(
+            "threading", n_jobs=len(self.blurs)
+        ):  # , require='sharedmem'):
             # job_args = [[img, blur_amount, matches] for img, blur_amount in zip(dup_images, self.blurs)]
             # OCR for all the images captured, then assign interpretation to the associated stat
-            Parallel()(delayed(self.process_squad_summary_page_helper)(img, blur_amount, matches) for img, blur_amount in zip(dup_images, self.blurs))
+            Parallel()(
+                delayed(self.process_squad_summary_page_helper)(
+                    img, blur_amount, matches
+                )
+                for img, blur_amount in zip(dup_images, self.blurs)
+            )
 
         # For each image, find the most common OCR text interpretation for each stat
         # If no available interpretations of the stat, assign the value "n/a"
@@ -210,18 +240,32 @@ class ApexOCREngine:
 
         return results_dict
 
-    def process_squad_summary_page_helper(self, img: Image, blur_amount: int, matches: DefaultDict, debug:bool = False):
+    def process_squad_summary_page_helper(
+        self, img: Image, blur_amount: int, matches: DefaultDict, debug: bool = False
+    ):
         if img is None:
             logger.error(f"img is None")
             exit(1)
-        # Get regions of interest        
+        # Get regions of interest
         squad_place, total_kills, players = get_rois(img)
-        
+
         if debug:
-            img.save(DATA_DIRECTORY / f"img_{datetime.utcnow().strftime('%Y-%m-%d_%H-%M-%S')}.png")
-            Image.fromarray(squad_place).save(DATA_DIRECTORY / f"squad_place_{datetime.utcnow().strftime('%Y-%m-%d_%H-%M-%S')}.png")
-            Image.fromarray(total_kills).save(DATA_DIRECTORY / f"total_kills_{datetime.utcnow().strftime('%Y-%m-%d_%H-%M-%S')}.png")
-            Image.fromarray(squad_place).save(DATA_DIRECTORY / f"squad_place_{datetime.utcnow().strftime('%Y-%m-%d_%H-%M-%S')}.png")
+            img.save(
+                DATA_DIRECTORY
+                / f"img_{datetime.utcnow().strftime('%Y-%m-%d_%H-%M-%S')}.png"
+            )
+            Image.fromarray(squad_place).save(
+                DATA_DIRECTORY
+                / f"squad_place_{datetime.utcnow().strftime('%Y-%m-%d_%H-%M-%S')}.png"
+            )
+            Image.fromarray(total_kills).save(
+                DATA_DIRECTORY
+                / f"total_kills_{datetime.utcnow().strftime('%Y-%m-%d_%H-%M-%S')}.png"
+            )
+            Image.fromarray(squad_place).save(
+                DATA_DIRECTORY
+                / f"squad_place_{datetime.utcnow().strftime('%Y-%m-%d_%H-%M-%S')}.png"
+            )
 
         # Get text from the images
         place_text = self.text_from_image_tesseract(squad_place, blur_amount)
