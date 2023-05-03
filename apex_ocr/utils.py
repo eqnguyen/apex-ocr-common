@@ -104,8 +104,7 @@ def display_results(results: dict) -> None:
         expand=False,
         subtitle=results["Hash"],
     )
-    console.print("\n")
-    console.print(panel)
+    console.print(f"\n{panel}")
 
 
 def replace_nondigits(parsed_string: List[str]) -> List[int]:
