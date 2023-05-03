@@ -52,7 +52,14 @@ class ApexOCREngine:
 
     @staticmethod
     def process_kakn(text: str) -> Tuple[int, int, int]:
+        # Try to fix misdetected slashes
+        if len(text) == 5 and re.search(r"\d+/\d+/\d+", text) is None:
+            text = "/".join([text[0], text[2], text[4]])
+
+        # Remove non-numeric and non-slash characters
         text = re.sub("[^0-9/]", "", text)
+
+        # Split text into kills/assitss/knockdowns
         parts = text.split("/")
 
         if len(parts) == 3:
@@ -276,81 +283,60 @@ class ApexOCREngine:
             total_kills, blur_amount, TESSERACT_BLOCK_CONFIG
         )
 
-        for header in SQUAD_SUMMARY_HEADERS:
-            if header == "Datetime":
-                continue
-            elif header == "Place":
-                matches[header].extend(
-                    replace_nondigits(SQUAD_SUMMARY_MAP[header].findall(place_text))
+        # Get squad placement
+        matches["Place"].extend(
+            replace_nondigits(SQUAD_SUMMARY_MAP["Place"].findall(place_text))
+        )
+
+        # Get squad kills
+        matches["Squad Kills"].extend(
+            replace_nondigits(
+                SQUAD_SUMMARY_MAP["Squad Kills"].findall(total_kills_text)
+            )
+        )
+
+        # Get individual player stat
+        for player, player_dict in players.items():
+            # Get player username
+            matches[player.upper()].append(
+                self.text_from_image_paddleocr(
+                    player_dict["player"],
+                    blur_amount,
                 )
-            elif header == "Squad Kills":
-                matches[header].extend(
-                    replace_nondigits(
-                        SQUAD_SUMMARY_MAP[header].findall(total_kills_text)
-                    )
-                )
-            elif header == "Hash":
-                continue
-            else:
-                # Player section
-                # TODO: Remove arbitrary player order in results
-                player = header.split(" ")[0].lower()
+            )
 
-                if " " not in header:
-                    matches[header].append(
-                        self.text_from_image_paddleocr(
-                            players[player]["player"],
-                            blur_amount,
-                        )
-                    )
-                else:
-                    category = header.split(" ")[1].lower()
+            # Get player kills/assists/knockdowns
+            kakn_text = self.text_from_image_paddleocr(player_dict["kakn"], blur_amount)
+            kills, assists, knocks = self.process_kakn(kakn_text)
+            matches[player.upper() + " Kills"].append(kills)
+            matches[player.upper() + " Assists"].append(assists)
+            matches[player.upper() + " Knocks"].append(knocks)
 
-                    if category == "kills":
-                        kakn_text = self.text_from_image_paddleocr(
-                            players[player]["kakn"], blur_amount
-                        )
-                        if (
-                            len(kakn_text) == 5
-                            and re.search(r"\d+/\d+/\d+", kakn_text) is None
-                        ):
-                            kakn_text = "/".join(
-                                [kakn_text[0], kakn_text[2], kakn_text[4]]
-                            )
+            # Get player damage
+            matches[player.upper() + " Damage"].append(
+                self.text_from_image_paddleocr(player_dict["damage"], blur_amount)
+            )
 
-                        kills, assists, knocks = self.process_kakn(kakn_text)
+            # Get player survival time
+            time_text = self.text_from_image_paddleocr(
+                player_dict["survival_time"], blur_amount
+            )
+            if len(time_text) >= 3 and ":" not in time_text:
+                time_text = ":".join([time_text[:-2], time_text[-2:]])
+            matches[player.upper() + " Time Survived"].append(time_text)
 
-                        matches[player.upper() + " Kills"].append(kills)
-                        matches[player.upper() + " Assists"].append(assists)
-                        matches[player.upper() + " Knocks"].append(knocks)
-                    elif category == "assists":
-                        continue
-                    elif category == "knocks":
-                        continue
-                    elif category == "damage":
-                        matches[header].append(
-                            self.text_from_image_paddleocr(
-                                players[player]["damage"], blur_amount
-                            )
-                        )
-                    elif category == "time":
-                        time_text = self.text_from_image_paddleocr(
-                            players[player]["survival_time"], blur_amount
-                        )
-                        if len(time_text) >= 3 and ":" not in time_text:
-                            time_text = ":".join([time_text[:-2], time_text[-2:]])
-                        matches[header].append(time_text)
-                    elif category == "revives":
-                        revive_text = self.text_from_image_paddleocr(
-                            players[player]["revives"], blur_amount
-                        )
-                        matches[header].append(revive_text)
-                    elif category == "respawns":
-                        respawn_text = self.text_from_image_paddleocr(
-                            players[player]["respawns"],
-                            blur_amount,
-                        )
-                        matches[header].append(respawn_text)
+            # Get player revives
+            revive_text = self.text_from_image_paddleocr(
+                player_dict["revives"], blur_amount
+            )
+            matches[player.upper() + " Revives"].append(revive_text)
+
+            # Get player respawns
+            respawn_text = self.text_from_image_paddleocr(
+                player_dict["respawns"],
+                blur_amount,
+            )
+            matches[player.upper() + " Respawns"].append(respawn_text)
 
     def process_screenshot(self, image: Union[Path, np.ndarray, None] = None) -> None:
         summary_type = ApexOCREngine.classify_summary_page(image)
