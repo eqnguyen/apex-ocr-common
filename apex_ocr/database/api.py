@@ -1,9 +1,14 @@
+import logging
+
 from sqlalchemy import create_engine
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm.session import sessionmaker
 
 from apex_ocr.utils import time_survived_to_seconds
 
-from .models import MatchResult, MatchType, Player, PlayerMatchResult
+from .models import Clan, MatchResult, MatchType, Player, PlayerMatchResult
+
+logger = logging.getLogger(__name__)
 
 
 class ApexDatabaseApi:
@@ -22,6 +27,13 @@ class ApexDatabaseApi:
             self.session.add_all(add_list[i : i + 100])
         self.session.commit()
 
+    def drop_all(self) -> None:
+        self.session.query(Clan).delete()
+        self.session.query(MatchResult).delete()
+        self.session.query(Player).delete()
+        self.session.query(PlayerMatchResult).delete()
+        self.session.commit()
+
     def push_results(self, results: dict) -> None:
         # TODO: Check for duplicate result in the database
         # TODO: Handle different match types
@@ -31,8 +43,14 @@ class ApexDatabaseApi:
             datetime=results["Datetime"],
             match_type=MatchType.BATTLE_ROYALE,
             place=results["Place"],
+            hash=results["Hash"],
         )
-        self.add(match_result)
+        try:
+            self.add(match_result)
+        except IntegrityError:
+            logger.info("Duplicate match results found in database!")
+            self.session.rollback()
+            return
 
         for p_num in ["P1", "P2", "P3"]:
             # Commit players if not already in database

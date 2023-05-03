@@ -1,11 +1,18 @@
 import logging
 import time
-import traceback
 from PIL import Image
 
 import click
 from rich.logging import RichHandler
-from rich.progress import track
+from rich.progress import (
+    BarColumn,
+    MofNCompleteColumn,
+    Progress,
+    TaskProgressColumn,
+    TextColumn,
+    TimeElapsedColumn,
+    TimeRemainingColumn,
+)
 
 from apex_ocr.config import *
 from apex_ocr.engine import ApexOCREngine
@@ -36,11 +43,23 @@ def main(filepath: str):
                 ]
             )
 
-        #  Assumes all files are the same size
-        scale_rois(Image.open(file_list[0]).size)
-        for screenshot_path in track(file_list):
-            logger.info(f"Performing OCR on {screenshot_path.name}...")
-            ocr_engine.process_screenshot(screenshot_path)
+        with Progress(
+            TextColumn("[progress.description]{task.description}"),
+            BarColumn(),
+            MofNCompleteColumn(),
+            TaskProgressColumn(),
+            TimeElapsedColumn(),
+            TimeRemainingColumn(),
+        ) as pb:
+            task1 = pb.add_task("Processing screenshots...", total=len(file_list))
+
+            #  Assumes all files are the same size
+            scale_rois(Image.open(file_list[0]).size)
+            for screenshot_path in file_list:
+                logger.info(f"Performing OCR on {screenshot_path.name}...")
+                ocr_engine.process_screenshot(screenshot_path)
+
+                pb.update(task1, advance=1)
 
     else:
         scale_rois()
@@ -49,7 +68,6 @@ def main(filepath: str):
         while True:
             ocr_engine.process_screenshot()
             time.sleep(3)
-            logger.info("Watching screen...")
 
 
 if __name__ == "__main__":
@@ -59,11 +77,14 @@ if __name__ == "__main__":
         format=" %(name)s | %(message)s",
         datefmt="%Y-%m-%d %H:%M:%S",
         force=True,
-        handlers=[RichHandler(omit_repeated_times=False, show_path=False)],
+        handlers=[
+            RichHandler(
+                omit_repeated_times=False, show_path=False, rich_tracebacks=True
+            )
+        ],
     )
 
     try:
         main()
     except Exception as e:
-        logger.error(e)
-        logger.error(traceback.print_exc())
+        logger.exception(e)

@@ -16,6 +16,7 @@ from apex_ocr.database.api import ApexDatabaseApi
 from apex_ocr.preprocessing import *
 from apex_ocr.roi import get_rois
 from apex_ocr.utils import *
+import re
 
 logger = logging.getLogger(__name__)
 
@@ -50,11 +51,62 @@ class ApexOCREngine:
             return threshold_img
 
     @staticmethod
+    def reformat_results(results: dict) -> dict:
+        # Copy dictionary
+        reformatted_dict = results.copy()
+
+        # Pop datetime because this is likely changing
+        reformatted_dict.pop("Datetime")
+
+        # Add player key to results dictionary
+        reformatted_dict["players"] = {}
+
+        # Iterate over the three players
+        for player in ["P1", "P2", "P3"]:
+            # Initialize nested dictionary for player
+            player_name = reformatted_dict[player]
+            reformatted_dict["players"][player_name] = {}
+
+            # Remove player key from dictionary
+            del reformatted_dict[player]
+
+            # Iterate over stats for individual player
+            for field in [
+                "Kills",
+                "Assists",
+                "Knocks",
+                "Damage",
+                "Time Survived",
+                "Revives",
+                "Respawns",
+            ]:
+                reformatted_dict["players"][player_name] = reformatted_dict[
+                    player + " " + field
+                ]
+
+                # Remove key from dictionary
+                del reformatted_dict[player + " " + field]
+
+        return reformatted_dict
+
+    @staticmethod
     def process_kakn(text: str) -> Tuple[int, int, int]:
+        # Try to fix misdetected slashes
+        if len(text) == 5 and re.search(r"\d+/\d+/\d+", text) is None:
+            text = "/".join([text[0], text[2], text[4]])
+
+        # Remove non-numeric and non-slash characters
+        text = re.sub("[^0-9/]", "", text)
+
+        # Split text into kills/assitss/knockdowns
         parts = text.split("/")
 
         if len(parts) == 3:
-            return int(parts[0]), int(parts[1]), int(parts[2])
+            try:
+                return int(parts[0]), int(parts[1]), int(parts[2])
+            except ValueError as e:
+                logger.error(f"{e}")
+                return -1, -1, -1
         else:
             logger.warning(f"Kills/Assists/Knocks misinterpreted: {parts}")
             return -1, -1, -1
@@ -124,6 +176,7 @@ class ApexOCREngine:
                 f.write(f"{summary_text}\n{kills_text}")
 
         if "summary" in summary_text:
+            # TODO: Classify different categories of squad summary
             if "xpbreakdown" in kills_text:
                 return SummaryType.PERSONAL
             elif "totalkills" in kills_text:
@@ -195,7 +248,7 @@ class ApexOCREngine:
             ]
 
         results_dict = defaultdict(None)
-        results_dict["Datetime"] = datetime.now()
+        results_dict["Datetime"] = datetime.utcnow()
         matches = defaultdict(list)
 
         if debug:
@@ -273,155 +326,66 @@ class ApexOCREngine:
             total_kills, blur_amount, TESSERACT_BLOCK_CONFIG
         )
 
-        for header in SQUAD_SUMMARY_HEADERS:
-            if header == "Datetime":
-                continue
-            elif header == "Place":
-                matches[header].extend(
-                    replace_nondigits(SQUAD_SUMMARY_MAP[header].findall(place_text))
-                )
-            elif header == "Squad Kills":
-                matches[header].extend(
-                    replace_nondigits(
-                        SQUAD_SUMMARY_MAP[header].findall(total_kills_text)
-                    )
-                )
-            else:
-                # Player section
-                player = header.split(" ")[0].lower()
-
-                if " " not in header:
-                    matches[header].append(
-                        self.text_from_image_paddleocr(
-                            players[player]["player"],
-                            blur_amount,
-                        )
-                    )
-                else:
-                    category = header.split(" ")[1].lower()
-
-                    if category == "kills":
-                        kakn_text = self.text_from_image_paddleocr(
-                            players[player]["kakn"], blur_amount
-                        )
-                        if (
-                            len(kakn_text) == 5
-                            and re.search(r"\d+/\d+/\d+", kakn_text) is None
-                        ):
-                            kakn_text = "/".join(
-                                [kakn_text[0], kakn_text[2], kakn_text[4]]
-                            )
-
-                        kills, assists, knocks = self.process_kakn(kakn_text)
-
-                        matches[player.upper() + " Kills"].append(kills)
-                        matches[player.upper() + " Assists"].append(assists)
-                        matches[player.upper() + " Knocks"].append(knocks)
-                    elif category == "assists":
-                        continue
-                    elif category == "knocks":
-                        continue
-                    elif category == "damage":
-                        matches[header].append(
-                            self.text_from_image_paddleocr(
-                                players[player]["damage"], blur_amount
-                            )
-                        )
-                    elif category == "time":
-                        time_text = self.text_from_image_paddleocr(
-                            players[player]["survival_time"], blur_amount
-                        )
-                        if len(time_text) >= 3 and ":" not in time_text:
-                            time_text = ":".join([time_text[:-2], time_text[-2:]])
-                        matches[header].append(time_text)
-                    elif category == "revives":
-                        revive_text = self.text_from_image_paddleocr(
-                            players[player]["revives"], blur_amount
-                        )
-                        matches[header].append(revive_text)
-                    elif category == "respawns":
-                        respawn_text = self.text_from_image_paddleocr(
-                            players[player]["respawns"],
-                            blur_amount,
-                        )
-                        matches[header].append(respawn_text)
-
-    def process_personal_summary_page(
-        self, image: Union[Path, np.ndarray, None] = None
-    ) -> dict:
-        if image:
-            if isinstance(image, np.ndarray):
-                dup_images = [Image.fromarray(image)] * self.num_images
-            elif isinstance(image, Path):
-                dup_images = [Image.open(image)] * self.num_images
-        else:
-            # Take duplicate images immediately to get the most common interpretation
-            dup_images = [ImageGrab.grab() for _ in range(self.num_images)]
-
-        place_images = [np.array(img.crop(PERSONAL_SQUAD_PLACED)) for img in dup_images]
-        xp_images = [np.array(img.crop(XP_BREAKDOWN)) for img in dup_images]
-
-        results_dict = defaultdict(None)
-        results_dict["Datetime"] = datetime.now()
-        matches = defaultdict(list)
-
-        log_and_beep("Processing personal summary...", 1500)
-
-        # OCR for all the images captured, then assign interpretation to the associated stat
-        for place_image, xp_image, blur_amount in zip(
-            place_images, xp_images, self.blurs
-        ):
-            # Get text from the images
-            place_text = self.text_from_image_paddleocr(place_image, blur_amount)
-            xp_text = self.text_from_image_tesseract(xp_image, blur_amount)
-
-            # Concatenate the image text
-            text = place_text + xp_text
-
-            logger.debug(f"Image text, blur={blur_amount}: {text}")
-
-            for header, matcher in PERSONAL_SUMMARY_MAP.items():
-                if header == "Time Survived":
-                    parsed_text = self.process_time_survived(matcher.findall(text))
-                else:
-                    parsed_text = replace_nondigits(matcher.findall(text))
-                matches[header].extend(parsed_text)
-
-        # For each image, find the most common OCR text interpretation for each stat
-        # If no available interpretations of the stat, assign the value "n/a"
-        for k, v in matches.items():
-            counts = Counter(v)
-            most_common = counts.most_common(1)
-
-            if len(most_common) > 0:
-                results_dict[k] = most_common[0][0]
-            else:
-                results_dict[k] = "n/a"
-
-        log_and_beep(
-            f"Finished processing images: {results_dict}",
-            1000,
+        # Get squad placement
+        matches["Place"].extend(
+            replace_nondigits(SQUAD_SUMMARY_MAP["Place"].findall(place_text))
         )
 
-        return results_dict
+        # Get squad kills
+        matches["Squad Kills"].extend(
+            replace_nondigits(
+                SQUAD_SUMMARY_MAP["Squad Kills"].findall(total_kills_text)
+            )
+        )
+
+        # Get individual player stat
+        for player, player_dict in players.items():
+            # Get player username
+            matches[player.upper()].append(
+                self.text_from_image_paddleocr(
+                    player_dict["player"],
+                    blur_amount,
+                )
+            )
+
+            # Get player kills/assists/knockdowns
+            kakn_text = self.text_from_image_paddleocr(player_dict["kakn"], blur_amount)
+            kills, assists, knocks = self.process_kakn(kakn_text)
+            matches[player.upper() + " Kills"].append(kills)
+            matches[player.upper() + " Assists"].append(assists)
+            matches[player.upper() + " Knocks"].append(knocks)
+
+            # Get player damage
+            matches[player.upper() + " Damage"].append(
+                self.text_from_image_paddleocr(player_dict["damage"], blur_amount)
+            )
+
+            # Get player survival time
+            time_text = self.text_from_image_paddleocr(
+                player_dict["survival_time"], blur_amount
+            )
+            if len(time_text) >= 3 and ":" not in time_text:
+                time_text = ":".join([time_text[:-2], time_text[-2:]])
+            matches[player.upper() + " Time Survived"].append(time_text)
+
+            # Get player revives
+            revive_text = self.text_from_image_paddleocr(
+                player_dict["revives"], blur_amount
+            )
+            matches[player.upper() + " Revives"].append(revive_text)
+
+            # Get player respawns
+            respawn_text = self.text_from_image_paddleocr(
+                player_dict["respawns"],
+                blur_amount,
+            )
+            matches[player.upper() + " Respawns"].append(respawn_text)
 
     def process_screenshot(self, image: Union[Path, np.ndarray, None] = None) -> None:
         summary_type = ApexOCREngine.classify_summary_page(image)
         results_dict = {}
 
         if summary_type == SummaryType.PERSONAL:
-            # Skip personal summary page since all this information is contained on the squad
-            # summary. Uncomment this section and remove "continue" if you'd like to process
-            # this page.
-
-            # results_dict = self.process_personal_summary_page(image)
-            # output_path = PERSONAL_STATS_FILE
-            # headers = PERSONAL_SUMMARY_HEADERS
-
-            # if not equal_dicts(last_personal_results, results_dict, ["Datetime"]):
-            #     last_personal_results = results_dict.copy()
-            #     new_result = True
-
             pass
 
         elif summary_type == SummaryType.SQUAD:
@@ -429,16 +393,9 @@ class ApexOCREngine:
             output_path = SQUAD_STATS_FILE
             headers = SQUAD_SUMMARY_HEADERS
 
-            # TODO: Fix check for existing results
-            # if not equal_dicts(last_squad_results, results_dict, ["Datetime"]):
-            #     last_squad_results = results_dict.copy()
-            #     new_result = True
-
-        else:
-            logger.warning("Unknown summary page detected")
-
         if results_dict:
-            # TODO: Handle personal results dictionary
+            d = ApexOCREngine.reformat_results(results_dict)
+            results_dict["Hash"] = hash_dict(d)
             display_results(results_dict)
 
             if write_to_file(output_path, headers, results_dict):

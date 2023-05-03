@@ -64,7 +64,7 @@ Sample file:
 
 ```yaml
 dialect: postgresql
-username: postgres
+username: <username>
 password: <password>
 hostname: localhost
 port: 5432
@@ -87,19 +87,12 @@ alembic upgrade head
 
 Most of the configurations for this application can be modified in `config.py`:
 
-- Modify `PERSONAL_STATS_FILE` or `PERSONAL_STATS_FILE` to change the name/path of the output CSV files
-- For screens of different resolutions, you may need to modify any or all of the bounding box variables:
-  - `TOP_SCREEN`: Specifies the top region of the screen for reading the header to determine if the current screenshot is a summary page or not
-  - `PERSONAL_SQUAD_PLACED` is a bounding box around the squad placement on the personal summary page
-  - `XP_BREAKDOWN` is a bounding box around all the personal summary page text
-
-If modifications are needed for performing OCR on the squad summary page, you will need to edit `roi.py`. Pretty much all of the bounding box locations are hard-coded for a 1920x1080 resolution screen.
+- Modify `DATA_DIRECTORY` or `SQUAD_STATS_FILE` to change the name/path of the output CSV files
+- Modify `DATABASE` and `DATABASE_YML_FILE` to enable/disable database output as well as changing the name/path of the database configuration file
 
 ## Usage
 
 [usage]: #usage
-
-**NOTE:** You _must_ run Apex Legends in windowed mode for this to work. This is honestly just because I couldn't figure out how to capture full screen mode, and Bordered Windowless is good enough.
 
 Simply run the following command to start watching the screen for results:
 
@@ -111,13 +104,19 @@ After some time, the program should print `Watching Screen...` to the console to
 
 A higher-pitched beep during the Match Summary screen indicates that the Match Summary screen has been recognized. A subsequent lower-pitched beep indicates that the requisite duplicate images have been taken, and you can now navigate away from the Match Summary screen. The OCR processing happens subsequently, and successful writing to the stats file is indicated by a console message.
 
-If the user remains on the Match Summary screen for a while, it's possible the program will try to re-analyze the same screen again. If this occurs, the Apex OCR module will compare the current results with the most recent results. If the results are equal, the OCR engine will skip writing the results to CSV/database. If the results are different, the OCR engine will write the results and update the variable containing the most recent results. This is to mitigate continuous logging of duplicate results.
+The package can also be run with a single command-line argument for path to screenshot or path to directory containing screenshots:
+
+```bash
+python -m apex_ocr <path/to/file/or/directory/>
+```
+
+If the argument is a path to a single image, the program will process that screenshot and exit. If the argument is a path to a directory containing many screenshots, the program will iterate through all the images in that directory, then exit. 
 
 ## Contributing
 
 [contributing]: #contributing
 
-I legit have no idea what I'm going when it comes to OCR, so if you can get a more consistent rate of interpretation of the screen, please go ahead and submit a PR. Also just generally I don't anticipate many people using this, so if you have any other contributions in mind, do the same, as this is currently very rough.
+We legit have no idea what we're doing, so please go ahead and submit a PR. Also we don't generally anticipate many people using this, so if you have any other contributions in mind, do the same, as this is currently very rough.
 
 ## License
 

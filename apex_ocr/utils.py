@@ -1,7 +1,12 @@
 import csv
+import hashlib
+import json
 import logging
+import winsound
 from typing import List
 
+import numpy as np
+import pandas as pd
 from rich.align import Align
 from rich.columns import Columns
 from rich.console import Console
@@ -59,7 +64,6 @@ except ImportError:
 
         beep = bad_beep
 
-
 else:
 
     def beep(beep_freq: int = 500, duration: float = 0.05, volume: float = 0.5) -> int:
@@ -98,8 +102,9 @@ def display_results(results: dict) -> None:
         title=f"[green]Squad Placed: #{results['Place']} - [red]Squad Kills: {results['Squad Kills']}",
         padding=(1, 2),
         expand=False,
+        subtitle=results["Hash"],
     )
-    console.print(panel)
+    console.print(f"\n{panel}")
 
 
 def replace_nondigits(parsed_string: List[str]) -> List[int]:
@@ -148,6 +153,50 @@ def time_survived_to_seconds(survival_time: str) -> int:
     return time_survived
 
 
+# Make a json string from the sorted dictionary then hash that string
+def hash_dict(d: dict) -> str:
+    """Compute sha256 hash of dictionary. Supports nested dictionaries.
+    Taken from https://ardunn.us/posts/immutify_dictionary/.
+
+    Args:
+        d (dict): Input dictionary to hash.
+
+    Returns:
+        str: Hash string.
+    """
+
+    # Collapse the dictionary to a single representation
+    def immutify_dictionary(d):
+        d_new = {}
+        for k, v in d.items():
+            # convert to python native immutables
+            if isinstance(v, (np.ndarray, pd.Series)):
+                d_new[k] = tuple(v.tolist())
+
+            # immutify any lists
+            elif isinstance(v, list):
+                d_new[k] = tuple(v)
+
+            # recursion if nested
+            elif isinstance(v, dict):
+                d_new[k] = immutify_dictionary(v)
+
+            # ensure numpy "primitives" are casted to json-friendly python natives
+            else:
+                # convert numpy types to native
+                if hasattr(v, "dtype"):
+                    d_new[k] = v.item()
+                else:
+                    d_new[k] = v
+
+        return dict(sorted(d_new.items(), key=lambda item: item[0]))
+
+    d_hashable = immutify_dictionary(d)
+    s_hashable = json.dumps(d_hashable).encode("utf-8")
+    m = hashlib.sha256(s_hashable).hexdigest()
+    return m
+
+
 def write_to_file(filepath: Path, headers: List[str], data: dict) -> bool:
     try:
         value_list = [data[header] for header in headers]
@@ -163,6 +212,8 @@ def write_to_file(filepath: Path, headers: List[str], data: dict) -> bool:
         # Write header row then game data
         write_method = "w"
         rows_to_write = [headers, value_list]
+
+    # TODO: Parse file for duplicate hash
 
     with open(filepath, write_method, newline="") as f:
         writer = csv.writer(f)

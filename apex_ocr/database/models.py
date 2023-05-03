@@ -46,17 +46,37 @@ class Player(Base):
     __tablename__ = "player"
 
     id = Column(Integer, primary_key=True)
+    clan_id = Column(Integer, ForeignKey("clan.id"))
     name = Column(String, nullable=False)
 
-    match_results = relationship("PlayerMatchResult", back_populates="player")
+    match_results = relationship(
+        "PlayerMatchResult",
+        back_populates="player",
+        cascade="all, delete",
+        passive_deletes=True,
+    )
+    clan = relationship("Clan", back_populates="players")
+
+
+class Clan(Base):
+    __tablename__ = "clan"
+
+    id = Column(Integer, primary_key=True)
+    tag = Column(String, nullable=False)
+    name = Column(String)
+
+    players = relationship(
+        "Player",
+        back_populates="clan",
+    )
 
 
 class PlayerMatchResult(Base):
     __tablename__ = "player_match_result"
 
     id = Column(Integer, primary_key=True)
-    player_id = Column(Integer, ForeignKey("player.id"))
-    match_id = Column(Integer, ForeignKey("match_result.id"))
+    player_id = Column(Integer, ForeignKey("player.id", ondelete="CASCADE"))
+    match_id = Column(Integer, ForeignKey("match_result.id", ondelete="CASCADE"))
     legend = Column(Enum(Legends))
     kills = Column(Integer, nullable=False)
     assists = Column(Integer, nullable=False)
@@ -78,5 +98,10 @@ class MatchResult(Base):
     match_type = Column(Enum(MatchType), nullable=False)
     place = Column(Integer)
     result = Column(Enum(WinLoss))
+    hash = Column(String, unique=True, nullable=False)
 
-    player_match_results = relationship("PlayerMatchResult")
+    player_match_results = relationship(
+        "PlayerMatchResult",
+        cascade="all, delete",
+        passive_deletes=True,
+    )
