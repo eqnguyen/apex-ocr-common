@@ -116,7 +116,7 @@ If the argument is a path to a single image, the program will process that scree
 
 [contributing]: #contributing
 
-We legit have no idea what we're doing, so please go ahead and submit a PR. Also just generally I don't anticipate many people using this, so if you have any other contributions in mind, do the same, as this is currently very rough.
+We legit have no idea what we're doing, so please go ahead and submit a PR. Also we don't generally anticipate many people using this, so if you have any other contributions in mind, do the same, as this is currently very rough.
 
 ## License
 
