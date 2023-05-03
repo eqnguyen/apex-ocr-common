@@ -198,7 +198,7 @@ class ApexOCREngine:
             ]
 
         results_dict = defaultdict(None)
-        results_dict["Datetime"] = datetime.now()
+        results_dict["Datetime"] = datetime.utcnow()
         matches = defaultdict(list)
 
         if debug:
