@@ -51,6 +51,38 @@ class ApexOCREngine:
             return threshold_img
 
     @staticmethod
+    def reformat_results(results: dict) -> dict:
+        # Copy dictionary
+        reformatted_dict = results.copy()
+
+        # Pop datetime because this is likely changing
+        reformatted_dict.pop("Datetime")
+
+        # Add player key to results dictionary
+        reformatted_dict["players"] = {}
+
+        # Iterate over the three players
+        for player in ["P1", "P2", "P3"]:
+            # Initialize nested dictionary for player
+            reformatted_dict["players"][reformatted_dict[player]] = {}
+
+            # Iterate over stats for individual player
+            for field in [
+                "Kills",
+                "Assists",
+                "Knocks",
+                "Damage",
+                "Time Survived",
+                "Revives",
+                "Respawns",
+            ]:
+                reformatted_dict["players"][
+                    reformatted_dict[player]
+                ] = reformatted_dict[player + " " + field]
+
+        return reformatted_dict
+
+    @staticmethod
     def process_kakn(text: str) -> Tuple[int, int, int]:
         # Try to fix misdetected slashes
         if len(text) == 5 and re.search(r"\d+/\d+/\d+", text) is None:
@@ -351,7 +383,8 @@ class ApexOCREngine:
             headers = SQUAD_SUMMARY_HEADERS
 
         if results_dict:
-            results_dict["Hash"] = dict_hash(results_dict, ["Datetime"])
+            d = ApexOCREngine.reformat_results(results_dict)
+            results_dict["Hash"] = hash_dict(d)
             display_results(results_dict)
 
             if write_to_file(output_path, headers, results_dict):
