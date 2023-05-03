@@ -1,6 +1,5 @@
 import logging
 import time
-import traceback
 from PIL import Image
 
 import click
@@ -78,11 +77,14 @@ if __name__ == "__main__":
         format=" %(name)s | %(message)s",
         datefmt="%Y-%m-%d %H:%M:%S",
         force=True,
-        handlers=[RichHandler(omit_repeated_times=False, show_path=False)],
+        handlers=[
+            RichHandler(
+                omit_repeated_times=False, show_path=False, rich_tracebacks=True
+            )
+        ],
     )
 
     try:
         main()
     except Exception as e:
-        logger.error(e)
-        traceback.print_exc()
+        logger.exception(e)
