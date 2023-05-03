@@ -64,7 +64,11 @@ class ApexOCREngine:
         # Iterate over the three players
         for player in ["P1", "P2", "P3"]:
             # Initialize nested dictionary for player
-            reformatted_dict["players"][reformatted_dict[player]] = {}
+            player_name = reformatted_dict[player]
+            reformatted_dict["players"][player_name] = {}
+
+            # Remove player key from dictionary
+            del reformatted_dict[player]
 
             # Iterate over stats for individual player
             for field in [
@@ -76,9 +80,12 @@ class ApexOCREngine:
                 "Revives",
                 "Respawns",
             ]:
-                reformatted_dict["players"][
-                    reformatted_dict[player]
-                ] = reformatted_dict[player + " " + field]
+                reformatted_dict["players"][player_name] = reformatted_dict[
+                    player + " " + field
+                ]
+
+                # Remove key from dictionary
+                del reformatted_dict[player + " " + field]
 
         return reformatted_dict
 
