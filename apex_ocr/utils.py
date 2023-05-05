@@ -107,7 +107,7 @@ def display_results(results: dict) -> None:
             "Revives",
             "Respawns",
         ]:
-            player_tables[i].add_row(stat, str(results[player + " " + stat]))
+            player_tables[i].add_row(stat, str(results[f"{player} {stat}"]))
 
     panel = Panel(
         Align.center(Columns(player_tables)),

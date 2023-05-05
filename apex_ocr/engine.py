@@ -81,11 +81,11 @@ class ApexOCREngine:
                 "Respawns",
             ]:
                 reformatted_dict["players"][player_name] = reformatted_dict[
-                    player + " " + field
+                    f"{player} {field}"
                 ]
 
                 # Remove key from dictionary
-                del reformatted_dict[player + " " + field]
+                del reformatted_dict[f"{player} {field}"]
 
         return reformatted_dict
 
@@ -118,11 +118,9 @@ class ApexOCREngine:
         for time_text in text_list:
             try:
                 if len(time_text) > 4:
-                    time_text = (
-                        time_text[:-4] + ":" + time_text[-4:-2] + ":" + time_text[-2:]
-                    )
+                    time_text = f"{time_text[:-4]}:{time_text[-4:-2]}:{time_text[-2:]}"
                 elif len(time_text) > 2:
-                    time_text = time_text[:-2] + ":" + time_text[-2:]
+                    time_text = f"{time_text[:-2]}:{time_text[-2:]}"
                 time_survived_list.append(time_text)
             except:
                 time_survived_list.append("0")
@@ -343,12 +341,12 @@ class ApexOCREngine:
             # Get player kills/assists/knockdowns
             kakn_text = self.text_from_image_paddleocr(player_dict["kakn"], blur_amount)
             kills, assists, knocks = self.process_kakn(kakn_text)
-            matches[player.upper() + " Kills"].append(kills)
-            matches[player.upper() + " Assists"].append(assists)
-            matches[player.upper() + " Knocks"].append(knocks)
+            matches[f"{player.upper()} Kills"].append(kills)
+            matches[f"{player.upper()} Assists"].append(assists)
+            matches[f"{player.upper()} Knocks"].append(knocks)
 
             # Get player damage
-            matches[player.upper() + " Damage"].append(
+            matches[f"{player.upper()} Damage"].append(
                 self.text_from_image_paddleocr(player_dict["damage"], blur_amount)
             )
 
@@ -358,20 +356,20 @@ class ApexOCREngine:
             )
             if len(time_text) >= 3 and ":" not in time_text:
                 time_text = ":".join([time_text[:-2], time_text[-2:]])
-            matches[player.upper() + " Time Survived"].append(time_text)
+            matches[f"{player.upper()} Time Survived"].append(time_text)
 
             # Get player revives
             revive_text = self.text_from_image_paddleocr(
                 player_dict["revives"], blur_amount
             )
-            matches[player.upper() + " Revives"].append(revive_text)
+            matches[f"{player.upper()} Revives"].append(revive_text)
 
             # Get player respawns
             respawn_text = self.text_from_image_paddleocr(
                 player_dict["respawns"],
                 blur_amount,
             )
-            matches[player.upper() + " Respawns"].append(respawn_text)
+            matches[f"{player.upper()} Respawns"].append(respawn_text)
 
     def process_screenshot(self, image: Union[Path, np.ndarray, None] = None) -> None:
         summary_type = self.classify_summary_page(image)

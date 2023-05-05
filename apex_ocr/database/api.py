@@ -62,20 +62,18 @@ class ApexDatabaseApi:
                 self.add(player)
 
             # Commit match player results
-            time_survived = time_survived_to_seconds(
-                results[p_num + " " + "Time Survived"]
-            )
+            time_survived = time_survived_to_seconds(results[f"{p_num} Time Survived"])
 
             player_match_result = PlayerMatchResult(
                 player_id=player.id,
                 match_id=match_result.id,
-                kills=results[p_num + " " + "Kills"],
-                assists=results[p_num + " " + "Assists"],
-                knockdowns=results[p_num + " " + "Knocks"],
-                damage=results[p_num + " " + "Damage"],
+                kills=results[f"{p_num} Kills"],
+                assists=results[f"{p_num} Assists"],
+                knockdowns=results[f"{p_num} Knocks"],
+                damage=results[f"{p_num} Damage"],
                 survival_time=time_survived,
-                revives=results[p_num + " " + "Revives"],
-                respawns=results[p_num + " " + "Respawns"],
+                revives=results[f"{p_num} Revives"],
+                respawns=results[f"{p_num} Respawns"],
             )
 
             self.add(player_match_result)
