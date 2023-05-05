@@ -18,7 +18,6 @@ from apex_ocr.config import (
     DATABASE,
     DATABASE_YML_FILE,
     SQUAD_STATS_FILE,
-    SQUAD_SUMMARY_HEADERS,
 )
 from apex_ocr.database.api import ApexDatabaseApi
 from apex_ocr.preprocessing import preprocess_image
@@ -33,6 +32,37 @@ class SummaryType(enum.Enum):
 
 
 class ApexOCREngine:
+    squad_summary_headers = [
+        "Datetime",
+        "Place",
+        "Squad Kills",
+        "P1",
+        "P1 Kills",
+        "P1 Assists",
+        "P1 Knocks",
+        "P1 Damage",
+        "P1 Time Survived",
+        "P1 Revives",
+        "P1 Respawns",
+        "P2",
+        "P2 Kills",
+        "P2 Assists",
+        "P2 Knocks",
+        "P2 Damage",
+        "P2 Time Survived",
+        "P2 Revives",
+        "P2 Respawns",
+        "P3",
+        "P3 Kills",
+        "P3 Assists",
+        "P3 Knocks",
+        "P3 Damage",
+        "P3 Time Survived",
+        "P3 Revives",
+        "P3 Respawns",
+        "Hash",
+    ]
+
     def __init__(self, n_images_per_blur: int = 1, blur_levels=[0, 3, 5, 7]) -> None:
         self.paddle_ocr = PaddleOCR(
             use_angle_cls=True, lang="en", show_log=False, debug=False
@@ -362,7 +392,7 @@ class ApexOCREngine:
             # Currently only supporting squad stats
             # Will need to change this if there is another output filepath or format
             if utils.write_to_file(
-                SQUAD_STATS_FILE, SQUAD_SUMMARY_HEADERS, results_dict
+                SQUAD_STATS_FILE, self.squad_summary_headers, results_dict
             ):
                 logger.info(f"Finished writing results to {SQUAD_STATS_FILE.name}")
 
