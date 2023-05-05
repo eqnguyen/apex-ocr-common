@@ -36,44 +36,6 @@ REPLACEMENTS = [
     ('"', ""),
 ]
 
-try:
-    import winsound
-
-    def beep(beep_freq: int = 500, duration: float = 0.05, volume: float = 0.5) -> None:
-        return winsound.Beep(beep_freq, 500)
-
-except ImportError:
-    import os
-
-    def beep(beep_freq: int = 500, duration: float = 0.05, volume: float = 0.5) -> int:
-        return os.system(
-            f"play -q -n -t alsa synth {duration} sine {beep_freq} vol {volume}"
-        )
-
-    # test if beep is able to run
-    return_code = beep(volume=0)
-    if return_code != 0:
-        if return_code == 32512:
-            logger.error(
-                f"The package sox is not installed. Please install it ('sudo apt install sox')"
-            )
-        else:
-            logger.error(
-                f"sox appears to be installed, but there was some other problem with it {return_code=}"
-            )
-
-        def bad_beep(beep_freq: int = 500, duration: float = 0.05, volume: float = 0.5):
-            logger.warning(f"Beep not available on this system")
-            return -1
-
-        beep = bad_beep
-
-
-def log_and_beep(print_text: str, beep_freq: int) -> None:
-    logger.info(print_text)
-    if beep_freq:
-        beep(beep_freq)
-
 
 def get_primary_monitor() -> Monitor:
     primary_monitor = Monitor(0, 0, 0, 0)

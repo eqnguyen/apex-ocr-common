@@ -247,7 +247,7 @@ class ApexOCREngine:
             # Magic: Important when running in docker with joblib
             dup_images[0].load()
 
-        utils.log_and_beep("Processing squad summary...", 1500)
+        logger.info("Processing squad summary...")
 
         with parallel_backend(
             "threading", n_jobs=len(self.blurs)
@@ -272,10 +272,7 @@ class ApexOCREngine:
             else:
                 results_dict[k] = "n/a"
 
-        utils.log_and_beep(
-            f"Finished processing images",
-            1000,
-        )
+        logger.info("Finished processing images")
 
         return results_dict
 
