@@ -10,7 +10,7 @@ import pandas as pd
     required=True,
     type=click.Path(exists=True, dir_okay=False, path_type=Path),
 )
-def remove_duplicates(filepath: Path) -> None:
+def remove_duplicate_results(filepath: Path) -> None:
     if filepath.exists() and filepath.suffix == ".csv":
         results_df = pd.read_csv(filepath)
         results_df = results_df.drop_duplicates(subset="Hash", keep="first")
@@ -18,4 +18,4 @@ def remove_duplicates(filepath: Path) -> None:
 
 
 if __name__ == "__main__":
-    remove_duplicates()
+    remove_duplicate_results()
