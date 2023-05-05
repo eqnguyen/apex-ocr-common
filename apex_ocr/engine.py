@@ -14,7 +14,7 @@ from PIL import Image, ImageGrab
 
 from apex_ocr.config import *
 from apex_ocr.database.api import ApexDatabaseApi
-from apex_ocr.preprocessing import *
+from apex_ocr.preprocessing import preprocess_image
 from apex_ocr.roi import SUMMARY_ROI, TOP_SCREEN, TOTAL_KILLS_ROI, get_rois
 from apex_ocr.utils import *
 
@@ -39,16 +39,6 @@ class ApexOCREngine:
         self.num_images = len(self.blurs)
 
         self.initialize_database_engine()
-
-    @staticmethod
-    def preprocess_image(image: np.ndarray, blur_amount: int = 0) -> np.ndarray:
-        grayscale_img = grayscale(image)
-        threshold_img = thresholding(grayscale_img)
-
-        if blur_amount > 0:
-            return cv2.GaussianBlur(threshold_img, (blur_amount, blur_amount), 0)
-        else:
-            return threshold_img
 
     @staticmethod
     def reformat_results(results: dict) -> dict:
@@ -178,7 +168,7 @@ class ApexOCREngine:
         config: str = TESSERACT_CONFIG,
         debug: bool = False,
     ) -> str:
-        img = ApexOCREngine.preprocess_image(image, blur_amount)
+        img = preprocess_image(image, blur_amount)
         if debug:
             Image.fromarray(img).save(
                 DATA_DIRECTORY
@@ -209,7 +199,7 @@ class ApexOCREngine:
             self.db_conn = None
 
     def text_from_image_paddleocr(self, image: np.ndarray, blur_amount: int) -> str:
-        img = self.preprocess_image(image, blur_amount)
+        img = preprocess_image(image, blur_amount)
         texts = self.paddle_ocr.ocr(img, cls=False)[0]
 
         # Concatenate all the recognized strings together
