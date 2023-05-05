@@ -48,17 +48,3 @@ SQUAD_SUMMARY_HEADERS = [
     "P3 Respawns",
     "Hash",
 ]
-
-# Regular expressions
-SQUAD_SUMMARY_MAP = {
-    "Place": re.compile("#([0-9]{1,2})"),
-    "Squad Kills": re.compile("(?:totalkills){1}([dDoO!lI0-9]{1,2})"),
-    "Player": re.compile("#([0-9]{1,2})"),
-    "Kills/Assists/Knocks": re.compile(
-        "(?:kills/assists/knocks){1}([dDoO!lI0-9]{1,2}/[dDoO!lI0-9]{1,2}/[dDoO!lI0-9]{1,2})"
-    ),
-    "Damage": re.compile("(?:amagedealt){1}(\d+)"),
-    "Time Survived": re.compile("(?:survivaltime){1}(\d+)"),
-    "Revives": re.compile("(?:revivegiven){1}(\d+)"),
-    "Respawns": re.compile("(?:respawngiven){1}(\d+)"),
-}

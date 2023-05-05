@@ -19,7 +19,6 @@ from apex_ocr.config import (
     DATABASE_YML_FILE,
     SQUAD_STATS_FILE,
     SQUAD_SUMMARY_HEADERS,
-    SQUAD_SUMMARY_MAP,
 )
 from apex_ocr.database.api import ApexDatabaseApi
 from apex_ocr.preprocessing import preprocess_image
@@ -293,7 +292,7 @@ class ApexOCREngine:
 
         # Get squad placement
         matches["Place"].extend(
-            utils.replace_nondigits(SQUAD_SUMMARY_MAP["Place"].findall(place_text))
+            utils.replace_nondigits(re.findall("#([0-9]{1,2})", place_text))
         )
 
         squad_kills = 0
