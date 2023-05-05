@@ -383,16 +383,16 @@ class ApexOCREngine:
 
         elif summary_type == SummaryType.SQUAD:
             results_dict = self.process_squad_summary_page(image)
-            output_path = SQUAD_STATS_FILE
-            headers = SQUAD_SUMMARY_HEADERS
 
         if results_dict:
             d = ApexOCREngine.reformat_results(results_dict)
             results_dict["Hash"] = hash_dict(d)
             display_results(results_dict)
 
-            if write_to_file(output_path, headers, results_dict):
-                logger.info(f"Finished writing results to {output_path.name}")
+            # Currently only supporting squad stats
+            # Will need to change this if there is another output filepath or format
+            if write_to_file(SQUAD_STATS_FILE, SQUAD_SUMMARY_HEADERS, results_dict):
+                logger.info(f"Finished writing results to {SQUAD_STATS_FILE.name}")
 
             if DATABASE and self.db_conn is not None:
                 self.db_conn.push_results(results_dict)
