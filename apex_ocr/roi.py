@@ -5,11 +5,14 @@ from PIL.Image import Image
 import logging
 
 from screeninfo import get_monitors
+from apex_ocr.utils import get_primary_monitor
 
 logger = logging.getLogger(__name__)
 
 # Resolution: 1920 x 1080
 # Regions of interest
+
+PRIMARY_MONITOR = get_primary_monitor()
 ROI_DICT = {}
 SQUAD_PLACE_ROI = ()
 TOTAL_KILLS_ROI = ()
@@ -44,14 +47,7 @@ def scale_rois(resolution: Tuple[int, int] = None):
     if resolution:
         width, height = resolution
     else:
-        # live
-        for m in get_monitors():
-            primary_monitor = None
-            if m.is_primary:
-                primary_monitor = m
-                break
-
-        width, height = primary_monitor.width, primary_monitor.height
+        width, height = PRIMARY_MONITOR.width, PRIMARY_MONITOR.height
 
     for key, val in ROI_VARS.items():
         if "WIDTH" in key:

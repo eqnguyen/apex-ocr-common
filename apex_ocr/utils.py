@@ -12,6 +12,7 @@ from rich.columns import Columns
 from rich.console import Console
 from rich.panel import Panel
 from rich.table import Table
+from screeninfo import Monitor, get_monitors
 
 from apex_ocr.config import *
 
@@ -74,6 +75,18 @@ def log_and_beep(print_text: str, beep_freq: int) -> None:
     logger.info(print_text)
     if beep_freq:
         beep(beep_freq)
+
+
+def get_primary_monitor() -> Monitor:
+    primary_monitor = Monitor(0, 0, 0, 0)
+    for m in get_monitors():
+        if m.is_primary:
+            primary_monitor = m
+            break
+    else:
+        logger.exception("No primary monitor detected!")
+
+    return primary_monitor
 
 
 def display_results(results: dict) -> None:
