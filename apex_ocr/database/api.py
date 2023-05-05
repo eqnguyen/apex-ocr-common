@@ -1,7 +1,7 @@
 import logging
 
 from sqlalchemy import create_engine
-from sqlalchemy.exc import IntegrityError
+from sqlalchemy.exc import IntegrityError, DataError
 from sqlalchemy.orm.session import sessionmaker
 
 from apex_ocr.utils import time_survived_to_seconds
@@ -88,5 +88,9 @@ class ApexDatabaseApi:
                 self.add_all(add_list)
             except IntegrityError:
                 logger.info("Duplicate match results found in database!")
+                self.session.rollback()
+                return
+            except DataError as e:
+                logger.error(e)
                 self.session.rollback()
                 return
