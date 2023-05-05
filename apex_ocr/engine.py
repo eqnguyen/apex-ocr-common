@@ -6,7 +6,6 @@ from datetime import datetime
 from typing import DefaultDict, List, Tuple, Union
 
 import numpy as np
-import pytesseract
 import yaml
 from paddleocr import PaddleOCR
 from PIL import Image, ImageGrab
@@ -98,7 +97,7 @@ class ApexOCREngine:
         # Remove non-numeric and non-slash characters
         text = re.sub("[^0-9/]", "", text)
 
-        # Split text into kills/assitss/knockdowns
+        # Split text into kills/assists/knockdowns
         parts = text.split("/")
 
         if len(parts) == 3:
@@ -176,23 +175,6 @@ class ApexOCREngine:
                 return SummaryType.SQUAD
 
         return None
-
-    @staticmethod
-    def text_from_image_tesseract(
-        image: np.ndarray,
-        blur_amount: int,
-        config: str = TESSERACT_CONFIG,
-        debug: bool = False,
-    ) -> str:
-        img = ApexOCREngine.preprocess_image(image, blur_amount)
-        if debug:
-            Image.fromarray(img).save(
-                DATA_DIRECTORY
-                / f"roi_preprocessed_{datetime.utcnow().strftime('%Y-%m-%d_%H-%M-%S')}.png"
-            )
-        text = pytesseract.image_to_string(img, config=config)
-        text = text.replace("\n", "").replace(" ", "").lower()
-        return text
 
     def initialize_database_engine(self):
         if DATABASE:
@@ -302,20 +284,12 @@ class ApexOCREngine:
             logger.error(f"img is None")
             exit(1)
         # Get regions of interest
-        squad_place, total_kills, players = get_rois(img)
+        squad_place, players = get_rois(img)
 
         if debug:
             img.save(
                 DATA_DIRECTORY
                 / f"img_{datetime.utcnow().strftime('%Y-%m-%d_%H-%M-%S')}.png"
-            )
-            Image.fromarray(squad_place).save(
-                DATA_DIRECTORY
-                / f"squad_place_{datetime.utcnow().strftime('%Y-%m-%d_%H-%M-%S')}.png"
-            )
-            Image.fromarray(total_kills).save(
-                DATA_DIRECTORY
-                / f"total_kills_{datetime.utcnow().strftime('%Y-%m-%d_%H-%M-%S')}.png"
             )
             Image.fromarray(squad_place).save(
                 DATA_DIRECTORY
