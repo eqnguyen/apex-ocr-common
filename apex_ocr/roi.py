@@ -1,10 +1,12 @@
-from typing import Tuple
+import logging
+from datetime import datetime
+from typing import Tuple, Union
 
 import numpy as np
+from PIL import ImageDraw
 from PIL.Image import Image
-import logging
 
-from screeninfo import get_monitors
+from apex_ocr.config import DATA_DIRECTORY
 from apex_ocr.utils import get_primary_monitor
 
 logger = logging.getLogger(__name__)
@@ -226,10 +228,6 @@ def calculate_rois():
 
 def get_rois(img: Image, debug: bool = False) -> Tuple[np.ndarray, np.ndarray, dict]:
     if debug:
-        from apex_ocr.config import DATA_DIRECTORY
-        from datetime import datetime
-        from PIL import ImageDraw
-
         draw = ImageDraw.Draw(img)
         draw.rectangle([0, 0, 50, 50], width=3)
         draw.rectangle(SQUAD_PLACE_ROI, width=3)

@@ -8,6 +8,7 @@ from typing import DefaultDict, List, Tuple, Union
 import numpy as np
 import pytesseract
 import yaml
+from joblib import Parallel, delayed, parallel_backend
 from paddleocr import PaddleOCR
 from PIL import Image, ImageGrab
 
@@ -249,7 +250,7 @@ class ApexOCREngine:
             dup_images[0].load()
 
         log_and_beep("Processing squad summary...", 1500)
-        from joblib import parallel_backend, Parallel, delayed
+        
 
         with parallel_backend(
             "threading", n_jobs=len(self.blurs)
