@@ -325,7 +325,7 @@ class ApexOCREngine:
             )
 
         # Get text from the images
-        place_text = self.text_from_image_tesseract(squad_place, blur_amount)
+        place_text = self.text_from_image_paddleocr(squad_place, blur_amount)
         total_kills_text = self.text_from_image_tesseract(
             total_kills, blur_amount, TESSERACT_BLOCK_CONFIG
         )
