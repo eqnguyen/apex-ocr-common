@@ -223,12 +223,12 @@ class ApexOCREngine:
 
     def text_from_image_paddleocr(self, image: np.ndarray, blur_amount: int) -> str:
         img = self.preprocess_image(image, blur_amount)
-        texts = self.paddle_ocr.ocr(img, det=False, cls=False)[0]
+        texts = self.paddle_ocr.ocr(img, cls=False)[0]
 
         # Concatenate all the recognized strings together
         text = ""
         for t in texts:
-            text += t[0]
+            text += t[1][0]
         text = text.replace("\n", "").replace(" ", "").lower()
 
         return text
