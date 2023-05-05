@@ -74,7 +74,10 @@ class ApexOCREngine:
 
         self.num_images = len(self.blurs)
 
-        self.initialize_database_engine()
+        if DATABASE:
+            self.db_conn = self.get_database_session()
+        else:
+            self.db_conn = None
 
     @staticmethod
     def reformat_results(results: dict) -> dict:
@@ -201,25 +204,22 @@ class ApexOCREngine:
 
         return None
 
-    def initialize_database_engine(self):
-        if DATABASE:
-            with open(DATABASE_YML_FILE) as db_file:
-                db_config = yaml.load(db_file, Loader=yaml.FullLoader)
+    def get_database_session(self) -> ApexDatabaseApi:
+        with open(DATABASE_YML_FILE) as db_file:
+            db_config = yaml.load(db_file, Loader=yaml.FullLoader)
 
-            dialect = db_config["dialect"]
-            username = db_config["username"]
-            password = db_config["password"]
-            hostname = db_config["hostname"]
-            port = db_config["port"]
-            database_name = db_config["database_name"]
+        dialect = db_config["dialect"]
+        username = db_config["username"]
+        password = db_config["password"]
+        hostname = db_config["hostname"]
+        port = db_config["port"]
+        database_name = db_config["database_name"]
 
-            db_conn_str = (
-                f"{dialect}://{username}:{password}@{hostname}:{port}/{database_name}"
-            )
+        db_conn_str = (
+            f"{dialect}://{username}:{password}@{hostname}:{port}/{database_name}"
+        )
 
-            self.db_conn = ApexDatabaseApi(db_conn_str)
-        else:
-            self.db_conn = None
+        return ApexDatabaseApi(db_conn_str)
 
     def text_from_image_paddleocr(
         self, image: np.ndarray, blur_amount: int, det: bool = False
