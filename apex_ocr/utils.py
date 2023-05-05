@@ -122,7 +122,12 @@ def time_survived_to_seconds(survival_time: str) -> int:
     split_text = survival_time.split(":")
 
     for i, value in enumerate(reversed(split_text)):
-        time_survived += (60**i) * int(value)
+        try:
+            time_survived += (60**i) * int(value)
+        except ValueError:
+            raise ValueError(
+                f"ValueError: Invalid survival time string: {survival_time}"
+            )
 
     return time_survived
 
