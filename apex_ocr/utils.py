@@ -39,6 +39,10 @@ REPLACEMENTS = [
 
 try:
     import winsound
+
+    def beep(beep_freq: int = 500, duration: float = 0.05, volume: float = 0.5) -> None:
+        return winsound.Beep(beep_freq, 500)
+
 except ImportError:
     import os
 
@@ -64,11 +68,6 @@ except ImportError:
             return -1
 
         beep = bad_beep
-
-else:
-
-    def beep(beep_freq: int = 500, duration: float = 0.05, volume: float = 0.5) -> int:
-        return winsound.Beep(beep_freq, 500)
 
 
 def log_and_beep(print_text: str, beep_freq: int) -> None:
