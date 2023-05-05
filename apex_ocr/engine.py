@@ -7,7 +7,6 @@ from pathlib import Path
 from typing import DefaultDict, List, Tuple, Union
 
 import numpy as np
-import pytesseract
 import yaml
 from joblib import Parallel, delayed, parallel_backend
 from paddleocr import PaddleOCR
@@ -21,8 +20,6 @@ from apex_ocr.config import (
     SQUAD_STATS_FILE,
     SQUAD_SUMMARY_HEADERS,
     SQUAD_SUMMARY_MAP,
-    TESSERACT_BLOCK_CONFIG,
-    TESSERACT_CONFIG,
 )
 from apex_ocr.database.api import ApexDatabaseApi
 from apex_ocr.preprocessing import preprocess_image
@@ -98,7 +95,7 @@ class ApexOCREngine:
         # Remove non-numeric and non-slash characters
         text = re.sub("[^0-9/]", "", text)
 
-        # Split text into kills/assitss/knockdowns
+        # Split text into kills/assists/knockdowns
         parts = text.split("/")
 
         if len(parts) == 3:
@@ -126,60 +123,6 @@ class ApexOCREngine:
                 time_survived_list.append("0")
 
         return time_survived_list
-
-    @staticmethod
-    def text_from_image_tesseract(
-        image: np.ndarray,
-        blur_amount: int,
-        config: str = TESSERACT_CONFIG,
-        debug: bool = False,
-    ) -> str:
-        img = preprocess_image(image, blur_amount)
-        if debug:
-            Image.fromarray(img).save(
-                DATA_DIRECTORY
-                / f"roi_preprocessed_{datetime.utcnow().strftime('%Y-%m-%d_%H-%M-%S')}.png"
-            )
-        text = pytesseract.image_to_string(img, config=config)
-        text = text.replace("\n", "").replace(" ", "").lower()
-        return text
-
-    def initialize_database_engine(self):
-        if DATABASE:
-            with open(DATABASE_YML_FILE) as db_file:
-                db_config = yaml.load(db_file, Loader=yaml.FullLoader)
-
-            dialect = db_config["dialect"]
-            username = db_config["username"]
-            password = db_config["password"]
-            hostname = db_config["hostname"]
-            port = db_config["port"]
-            database_name = db_config["database_name"]
-
-            db_conn_str = (
-                f"{dialect}://{username}:{password}@{hostname}:{port}/{database_name}"
-            )
-
-            self.db_conn = ApexDatabaseApi(db_conn_str)
-        else:
-            self.db_conn = None
-
-    def text_from_image_paddleocr(
-        self, image: np.ndarray, blur_amount: int, det: bool = False
-    ) -> str:
-        img = preprocess_image(image, blur_amount)
-        texts = self.paddle_ocr.ocr(img, det=det, cls=False)[0]
-
-        # Concatenate all the recognized strings together
-        text = ""
-        for t in texts:
-            if det:
-                text += t[1][0]
-            else:
-                text += t[0]
-        text = text.replace("\n", "").replace(" ", "").lower()
-
-        return text
 
     def classify_summary_page(
         self, input: Union[Path, np.ndarray, None] = None, debug: bool = False
@@ -228,6 +171,43 @@ class ApexOCREngine:
                 return SummaryType.SQUAD
 
         return None
+
+    def initialize_database_engine(self):
+        if DATABASE:
+            with open(DATABASE_YML_FILE) as db_file:
+                db_config = yaml.load(db_file, Loader=yaml.FullLoader)
+
+            dialect = db_config["dialect"]
+            username = db_config["username"]
+            password = db_config["password"]
+            hostname = db_config["hostname"]
+            port = db_config["port"]
+            database_name = db_config["database_name"]
+
+            db_conn_str = (
+                f"{dialect}://{username}:{password}@{hostname}:{port}/{database_name}"
+            )
+
+            self.db_conn = ApexDatabaseApi(db_conn_str)
+        else:
+            self.db_conn = None
+
+    def text_from_image_paddleocr(
+        self, image: np.ndarray, blur_amount: int, det: bool = False
+    ) -> str:
+        img = preprocess_image(image, blur_amount)
+        texts = self.paddle_ocr.ocr(img, det=det, cls=False)[0]
+
+        # Concatenate all the recognized strings together
+        text = ""
+        for t in texts:
+            if det:
+                text += t[1][0]
+            else:
+                text += t[0]
+        text = text.replace("\n", "").replace(" ", "").lower()
+
+        return text
 
     def process_squad_summary_page(
         self, image: Union[Path, np.ndarray, None] = None, debug: bool = False
@@ -296,7 +276,7 @@ class ApexOCREngine:
             logger.error(f"img is None")
             exit(1)
         # Get regions of interest
-        squad_place, total_kills, players = get_rois(img)
+        squad_place, players = get_rois(img)
 
         if debug:
             img.save(
@@ -307,32 +287,16 @@ class ApexOCREngine:
                 DATA_DIRECTORY
                 / f"squad_place_{datetime.utcnow().strftime('%Y-%m-%d_%H-%M-%S')}.png"
             )
-            Image.fromarray(total_kills).save(
-                DATA_DIRECTORY
-                / f"total_kills_{datetime.utcnow().strftime('%Y-%m-%d_%H-%M-%S')}.png"
-            )
-            Image.fromarray(squad_place).save(
-                DATA_DIRECTORY
-                / f"squad_place_{datetime.utcnow().strftime('%Y-%m-%d_%H-%M-%S')}.png"
-            )
 
         # Get text from the images
         place_text = self.text_from_image_paddleocr(squad_place, blur_amount)
-        total_kills_text = self.text_from_image_tesseract(
-            total_kills, blur_amount, TESSERACT_BLOCK_CONFIG
-        )  # Want to replace tesseract here but PaddleOCR can't handle squad kills of 1 :(
 
         # Get squad placement
         matches["Place"].extend(
             utils.replace_nondigits(SQUAD_SUMMARY_MAP["Place"].findall(place_text))
         )
 
-        # Get squad kills
-        matches["Squad Kills"].extend(
-            utils.replace_nondigits(
-                SQUAD_SUMMARY_MAP["Squad Kills"].findall(total_kills_text)
-            )
-        )
+        squad_kills = 0
 
         # Get individual player stat
         for player, player_dict in players.items():
@@ -347,6 +311,7 @@ class ApexOCREngine:
             # Get player kills/assists/knockdowns
             kakn_text = self.text_from_image_paddleocr(player_dict["kakn"], blur_amount)
             kills, assists, knocks = self.process_kakn(kakn_text)
+            squad_kills += kills
             matches[f"{player} Kills"].append(kills)
             matches[f"{player} Assists"].append(assists)
             matches[f"{player} Knocks"].append(knocks)
@@ -376,6 +341,9 @@ class ApexOCREngine:
                 blur_amount,
             )
             matches[f"{player} Respawns"].append(respawn_text)
+
+        # Get squad kills
+        matches["Squad Kills"].append(squad_kills)
 
     def process_screenshot(self, image: Union[Path, np.ndarray, None] = None) -> None:
         summary_type = self.classify_summary_page(image)

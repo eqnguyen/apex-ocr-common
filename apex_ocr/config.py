@@ -49,10 +49,6 @@ SQUAD_SUMMARY_HEADERS = [
     "Hash",
 ]
 
-# Tesseract configurations
-TESSERACT_CONFIG = "-c tessedit_char_whitelist=()/#01234567890ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz --psm 11"
-TESSERACT_BLOCK_CONFIG = "-c tessedit_char_whitelist=()/#01234567890ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz --psm 6"
-
 # Regular expressions
 SQUAD_SUMMARY_MAP = {
     "Place": re.compile("#([0-9]{1,2})"),

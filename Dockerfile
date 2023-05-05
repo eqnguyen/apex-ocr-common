@@ -5,11 +5,7 @@ RUN apt-get update && DEBIAN_FRONTEND=noninteractive TZ=Etc/UTC apt-get -y insta
 RUN apt-get update && apt-get install -y \
     python3-pip \
     libleptonica-dev \
-    tesseract-ocr \
-    libtesseract-dev \
     python3-pil \
-    tesseract-ocr-eng \
-    tesseract-ocr-script-latn \
     software-properties-common \
     git \
     curl \

@@ -222,19 +222,17 @@ def calculate_rois():
     )
 
 
-def get_rois(img: Image, debug: bool = False) -> Tuple[np.ndarray, np.ndarray, dict]:
+def get_rois(img: Image, debug: bool = False) -> Tuple[np.ndarray, dict]:
     if debug:
         draw = ImageDraw.Draw(img)
         draw.rectangle((0, 0, 50, 50), width=3)
         draw.rectangle(SQUAD_PLACE_ROI, width=3)
-        draw.rectangle(TOTAL_KILLS_ROI, width=3)
         img.save(
             DATA_DIRECTORY
             / f"rois_img_{datetime.utcnow().strftime('%Y-%m-%d_%H-%M-%S')}.png"
         )
 
     squad_place = np.array(img.crop(SQUAD_PLACE_ROI))
-    total_kill = np.array(img.crop(TOTAL_KILLS_ROI))
 
     players = {}
 
@@ -245,4 +243,4 @@ def get_rois(img: Image, debug: bool = False) -> Tuple[np.ndarray, np.ndarray, d
             player_images[stat[0]] = np.array(img.crop(img_region))
         players[player[0]] = player_images
 
-    return squad_place, total_kill, players
+    return squad_place, players

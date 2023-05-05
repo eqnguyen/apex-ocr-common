@@ -6,7 +6,6 @@
 
 - Python >= 3.8
 - Apex Legends
-- [Tesseract](https://github.com/tesseract-ocr/tesseract/wiki)
 - [PaddleOCR](https://github.com/PaddlePaddle/PaddleOCR)
 - [PostgreSQL](https://www.postgresql.org/)
 
