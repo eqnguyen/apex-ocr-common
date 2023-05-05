@@ -1,8 +1,9 @@
 import logging
 import time
-from PIL import Image
+from pathlib import Path
 
 import click
+from PIL import Image
 from rich.logging import RichHandler
 from rich.progress import (
     BarColumn,
@@ -14,9 +15,8 @@ from rich.progress import (
     TimeRemainingColumn,
 )
 
-from apex_ocr.config import *
+from apex_ocr.config import IMAGE_EXTENSIONS
 from apex_ocr.engine import ApexOCREngine
-from apex_ocr.utils import *
 from apex_ocr.roi import scale_rois
 
 logging.captureWarnings(True)

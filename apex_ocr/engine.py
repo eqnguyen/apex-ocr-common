@@ -3,6 +3,7 @@ import logging
 import re
 from collections import Counter, defaultdict
 from datetime import datetime
+from pathlib import Path
 from typing import DefaultDict, List, Tuple, Union
 
 import numpy as np
@@ -12,11 +13,20 @@ from joblib import Parallel, delayed, parallel_backend
 from paddleocr import PaddleOCR
 from PIL import Image, ImageGrab
 
-from apex_ocr.config import *
+from apex_ocr import utils
+from apex_ocr.config import (
+    DATA_DIRECTORY,
+    DATABASE,
+    DATABASE_YML_FILE,
+    SQUAD_STATS_FILE,
+    SQUAD_SUMMARY_HEADERS,
+    SQUAD_SUMMARY_MAP,
+    TESSERACT_BLOCK_CONFIG,
+    TESSERACT_CONFIG,
+)
 from apex_ocr.database.api import ApexDatabaseApi
 from apex_ocr.preprocessing import preprocess_image
 from apex_ocr.roi import SUMMARY_ROI, TOP_SCREEN, TOTAL_KILLS_ROI, get_rois
-from apex_ocr.utils import *
 
 logger = logging.getLogger(__name__)
 
@@ -117,50 +127,6 @@ class ApexOCREngine:
 
         return time_survived_list
 
-    def classify_summary_page(
-        self, input: Union[Path, np.ndarray, None] = None, debug: bool = False
-    ) -> Union[SummaryType, None]:
-        if input:
-            if isinstance(input, np.ndarray):
-                image = Image.fromarray(input)
-            elif isinstance(input, Path):
-                image = Image.open(str(input))
-        else:
-            image = ImageGrab.grab(bbox=TOP_SCREEN)
-
-        summary_img = np.array(image.crop(SUMMARY_ROI))
-        total_kills_img = np.array(image.crop(TOTAL_KILLS_ROI))
-
-        summary_text = self.text_from_image_paddleocr(summary_img, blur_amount=3)
-        kills_text = self.text_from_image_paddleocr(total_kills_img, blur_amount=3)
-
-        if debug:
-            image.save(
-                DATA_DIRECTORY
-                / f"raw_{datetime.utcnow().strftime('%Y-%m-%d_%H-%M-%S')}.png"
-            )
-
-            Image.fromarray(total_kills_img).save(
-                DATA_DIRECTORY
-                / f"preprocessed_{datetime.utcnow().strftime('%Y-%m-%d_%H-%M-%S')}.png"
-            )
-
-            with open(
-                DATA_DIRECTORY
-                / f"text_{datetime.utcnow().strftime('%Y-%m-%d_%H-%M-%S')}.txt",
-                "w+",
-            ) as f:
-                f.write(f"{summary_text}\n{kills_text}")
-
-        if "summary" in summary_text:
-            # TODO: Classify different categories of squad summary
-            if "xpbreakdown" in kills_text:
-                return SummaryType.PERSONAL
-            elif "totalkills" in kills_text:
-                return SummaryType.SQUAD
-
-        return None
-
     @staticmethod
     def text_from_image_tesseract(
         image: np.ndarray,
@@ -210,6 +176,50 @@ class ApexOCREngine:
 
         return text
 
+    def classify_summary_page(
+        self, input: Union[Path, np.ndarray, None] = None, debug: bool = False
+    ) -> Union[SummaryType, None]:
+        if input:
+            if isinstance(input, np.ndarray):
+                image = Image.fromarray(input)
+            elif isinstance(input, Path):
+                image = Image.open(str(input))
+        else:
+            image = ImageGrab.grab(bbox=TOP_SCREEN)
+
+        summary_img = np.array(image.crop(SUMMARY_ROI))
+        total_kills_img = np.array(image.crop(TOTAL_KILLS_ROI))
+
+        summary_text = self.text_from_image_paddleocr(summary_img, blur_amount=3)
+        kills_text = self.text_from_image_paddleocr(total_kills_img, blur_amount=3)
+
+        if debug:
+            image.save(
+                DATA_DIRECTORY
+                / f"raw_{datetime.utcnow().strftime('%Y-%m-%d_%H-%M-%S')}.png"
+            )
+
+            Image.fromarray(total_kills_img).save(
+                DATA_DIRECTORY
+                / f"preprocessed_{datetime.utcnow().strftime('%Y-%m-%d_%H-%M-%S')}.png"
+            )
+
+            with open(
+                DATA_DIRECTORY
+                / f"text_{datetime.utcnow().strftime('%Y-%m-%d_%H-%M-%S')}.txt",
+                "w+",
+            ) as f:
+                f.write(f"{summary_text}\n{kills_text}")
+
+        if "summary" in summary_text:
+            # TODO: Classify different categories of squad summary
+            if "xpbreakdown" in kills_text:
+                return SummaryType.PERSONAL
+            elif "totalkills" in kills_text:
+                return SummaryType.SQUAD
+
+        return None
+
     def process_squad_summary_page(
         self, image: Union[Path, np.ndarray, None] = None, debug: bool = False
     ) -> dict:
@@ -237,7 +247,7 @@ class ApexOCREngine:
             # Magic: Important when running in docker with joblib
             dup_images[0].load()
 
-        log_and_beep("Processing squad summary...", 1500)
+        utils.log_and_beep("Processing squad summary...", 1500)
 
         with parallel_backend(
             "threading", n_jobs=len(self.blurs)
@@ -262,7 +272,7 @@ class ApexOCREngine:
             else:
                 results_dict[k] = "n/a"
 
-        log_and_beep(
+        utils.log_and_beep(
             f"Finished processing images",
             1000,
         )
@@ -308,12 +318,12 @@ class ApexOCREngine:
 
         # Get squad placement
         matches["Place"].extend(
-            replace_nondigits(SQUAD_SUMMARY_MAP["Place"].findall(place_text))
+            utils.replace_nondigits(SQUAD_SUMMARY_MAP["Place"].findall(place_text))
         )
 
         # Get squad kills
         matches["Squad Kills"].extend(
-            replace_nondigits(
+            utils.replace_nondigits(
                 SQUAD_SUMMARY_MAP["Squad Kills"].findall(total_kills_text)
             )
         )
@@ -373,12 +383,14 @@ class ApexOCREngine:
 
         if results_dict:
             d = ApexOCREngine.reformat_results(results_dict)
-            results_dict["Hash"] = hash_dict(d)
-            display_results(results_dict)
+            results_dict["Hash"] = utils.hash_dict(d)
+            utils.display_results(results_dict)
 
             # Currently only supporting squad stats
             # Will need to change this if there is another output filepath or format
-            if write_to_file(SQUAD_STATS_FILE, SQUAD_SUMMARY_HEADERS, results_dict):
+            if utils.write_to_file(
+                SQUAD_STATS_FILE, SQUAD_SUMMARY_HEADERS, results_dict
+            ):
                 logger.info(f"Finished writing results to {SQUAD_STATS_FILE.name}")
 
             if DATABASE and self.db_conn is not None:

@@ -3,6 +3,7 @@ import hashlib
 import json
 import logging
 import winsound
+from pathlib import Path
 from typing import List
 
 import numpy as np
@@ -13,8 +14,6 @@ from rich.console import Console
 from rich.panel import Panel
 from rich.table import Table
 from screeninfo import Monitor, get_monitors
-
-from apex_ocr.config import *
 
 logger = logging.getLogger(__name__)
 console = Console()
