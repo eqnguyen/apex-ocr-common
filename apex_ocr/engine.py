@@ -119,6 +119,30 @@ class ApexOCREngine:
         return reformatted_dict
 
     @staticmethod
+    def is_valid_results(results: dict) -> bool:
+        # Check for empty results dictionary
+        if not results:
+            logger.error("Empty results!")
+            return False
+
+        # Check for "n/a" in squad placement
+        if "n/a" in results.values():
+            logger.error("N/A found in results!")
+            return False
+
+        # Check for any fields with empty strings
+        if "" in results.values():
+            logger.error("Empty string in results!")
+            return False
+
+        # Check for invalid kills / assists / knockdowns
+        if -1 in results.values():
+            logger.error("Inalid Kills/Assists/Knocks in results!")
+            return False
+
+        return True
+
+    @staticmethod
     def process_kakn(text: str) -> Tuple[int, int, int]:
         # Try to fix misdetected slashes
         if len(text) == 5 and re.search(r"\d+/\d+/\d+", text) is None:
@@ -389,12 +413,13 @@ class ApexOCREngine:
             results_dict["Hash"] = utils.hash_dict(d)
             utils.display_results(results_dict)
 
-            # Currently only supporting squad stats
-            # Will need to change this if there is another output filepath or format
-            if utils.write_to_file(
-                SQUAD_STATS_FILE, self.squad_summary_headers, results_dict
-            ):
-                logger.info(f"Finished writing results to {SQUAD_STATS_FILE.name}")
+            if ApexOCREngine.is_valid_results(results_dict):
+                # Currently only supporting squad stats
+                # Will need to change this if there is another output filepath or format
+                if utils.write_to_file(
+                    SQUAD_STATS_FILE, self.squad_summary_headers, results_dict
+                ):
+                    logger.info(f"Finished writing results to {SQUAD_STATS_FILE.name}")
 
-            if DATABASE and self.db_conn is not None:
-                self.db_conn.push_results(results_dict)
+                if DATABASE and self.db_conn is not None:
+                    self.db_conn.push_results(results_dict)
