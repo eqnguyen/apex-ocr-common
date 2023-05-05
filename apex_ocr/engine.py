@@ -250,7 +250,6 @@ class ApexOCREngine:
             dup_images[0].load()
 
         log_and_beep("Processing squad summary...", 1500)
-        
 
         with parallel_backend(
             "threading", n_jobs=len(self.blurs)
@@ -317,7 +316,7 @@ class ApexOCREngine:
         place_text = self.text_from_image_paddleocr(squad_place, blur_amount)
         total_kills_text = self.text_from_image_tesseract(
             total_kills, blur_amount, TESSERACT_BLOCK_CONFIG
-        ) # Want to replace tesseract here but PaddleOCR can't handle squad kills of 1 :(
+        )  # Want to replace tesseract here but PaddleOCR can't handle squad kills of 1 :(
 
         # Get squad placement
         matches["Place"].extend(

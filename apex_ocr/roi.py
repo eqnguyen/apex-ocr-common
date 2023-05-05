@@ -65,7 +65,7 @@ ROI_VARS = {
 }
 
 
-def scale_rois(resolution: Tuple[int, int] = None):
+def scale_rois(resolution: Union[Tuple[int, int], None] = None):
     # resolution means we are analyzing screenshot(s)
     if resolution:
         width, height = resolution
@@ -73,16 +73,12 @@ def scale_rois(resolution: Tuple[int, int] = None):
         width, height = PRIMARY_MONITOR.width, PRIMARY_MONITOR.height
 
     for key, val in ROI_VARS.items():
-        if "WIDTH" in key:
-            ROI_VARS[key] = val / 1920 * width
-        elif "COL" in key:
+        if "WIDTH" in key or "COL" in key:
             # scale by width
-            ROI_VARS[key] = val / 1920 * width
-        elif "HEIGHT" in key:
-            ROI_VARS[key] = val / 1080 * height
-        elif "ROW" in key:
+            ROI_VARS[key] = val * width // 1920
+        elif "HEIGHT" in key or "ROW" in key:
             # scale by height
-            ROI_VARS[key] = val / 1080 * height
+            ROI_VARS[key] = val * height // 1080
         else:
             logger.error(f"Unknown var: {key}")
 
@@ -229,7 +225,7 @@ def calculate_rois():
 def get_rois(img: Image, debug: bool = False) -> Tuple[np.ndarray, np.ndarray, dict]:
     if debug:
         draw = ImageDraw.Draw(img)
-        draw.rectangle([0, 0, 50, 50], width=3)
+        draw.rectangle((0, 0, 50, 50), width=3)
         draw.rectangle(SQUAD_PLACE_ROI, width=3)
         draw.rectangle(TOTAL_KILLS_ROI, width=3)
         img.save(
