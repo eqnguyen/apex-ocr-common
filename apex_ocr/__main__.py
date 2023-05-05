@@ -77,11 +77,7 @@ if __name__ == "__main__":
         format=" %(name)s | %(message)s",
         datefmt="%Y-%m-%d %H:%M:%S",
         force=True,
-        handlers=[
-            RichHandler(
-                omit_repeated_times=False, rich_tracebacks=True
-            )
-        ],
+        handlers=[RichHandler(omit_repeated_times=False, rich_tracebacks=True)],
     )
 
     try:
