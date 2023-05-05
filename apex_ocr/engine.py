@@ -143,8 +143,12 @@ class ApexOCREngine:
         summary_img = np.array(image.crop(SUMMARY_ROI))
         total_kills_img = np.array(image.crop(TOTAL_KILLS_ROI))
 
-        summary_text = self.text_from_image_paddleocr(summary_img, blur_amount=3)
-        kills_text = self.text_from_image_paddleocr(total_kills_img, blur_amount=3)
+        summary_text = self.text_from_image_paddleocr(
+            summary_img, blur_amount=3, det=True
+        )
+        kills_text = self.text_from_image_paddleocr(
+            total_kills_img, blur_amount=3, det=True
+        )
 
         if debug:
             image.save(
@@ -210,14 +214,19 @@ class ApexOCREngine:
         else:
             self.db_conn = None
 
-    def text_from_image_paddleocr(self, image: np.ndarray, blur_amount: int) -> str:
+    def text_from_image_paddleocr(
+        self, image: np.ndarray, blur_amount: int, det: bool = False
+    ) -> str:
         img = self.preprocess_image(image, blur_amount)
-        texts = self.paddle_ocr.ocr(img, cls=False)[0]
+        texts = self.paddle_ocr.ocr(img, det=det, cls=False)[0]
 
         # Concatenate all the recognized strings together
         text = ""
         for t in texts:
-            text += t[1][0]
+            if det:
+                text += t[1][0]
+            else:
+                text += t[0]
         text = text.replace("\n", "").replace(" ", "").lower()
 
         return text
