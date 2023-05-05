@@ -14,9 +14,8 @@ from PIL import Image, ImageGrab
 from apex_ocr.config import *
 from apex_ocr.database.api import ApexDatabaseApi
 from apex_ocr.preprocessing import *
-from apex_ocr.roi import get_rois
+from apex_ocr.roi import SUMMARY_ROI, TOP_SCREEN, TOTAL_KILLS_ROI, get_rois
 from apex_ocr.utils import *
-import re
 
 logger = logging.getLogger(__name__)
 

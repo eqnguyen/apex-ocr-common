@@ -13,9 +13,30 @@ logger = logging.getLogger(__name__)
 # Regions of interest
 
 PRIMARY_MONITOR = get_primary_monitor()
+
+SUMMARY_ROI = (
+    PRIMARY_MONITOR.width // 3,
+    0,
+    PRIMARY_MONITOR.width * 2 // 3,
+    PRIMARY_MONITOR.height // 10,
+)
+
+TOTAL_KILLS_ROI = (
+    PRIMARY_MONITOR.width * 5 // 6,
+    PRIMARY_MONITOR.height // 10,
+    PRIMARY_MONITOR.width,
+    PRIMARY_MONITOR.height * 2 // 10,
+)
+
+TOP_SCREEN = (
+    PRIMARY_MONITOR.x,
+    PRIMARY_MONITOR.y,
+    PRIMARY_MONITOR.x + PRIMARY_MONITOR.width,
+    PRIMARY_MONITOR.y + PRIMARY_MONITOR.height,
+)
+
 ROI_DICT = {}
 SQUAD_PLACE_ROI = ()
-TOTAL_KILLS_ROI = ()
 
 ROI_VARS = {
     "TOP_ROW_START": 120,

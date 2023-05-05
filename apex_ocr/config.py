@@ -1,43 +1,17 @@
+import logging
 import re
 from pathlib import Path
 
+logger = logging.getLogger(__name__)
+
 # Valid image extensions
 IMAGE_EXTENSIONS = [".jpg", ".jpeg", ".png"]
-
-from screeninfo import get_monitors
 
 # Path to stats file
 DATA_DIRECTORY = Path(__file__).parent.parent / "data"
 DATA_DIRECTORY.mkdir(parents=True, exist_ok=True)
 
 SQUAD_STATS_FILE = DATA_DIRECTORY / "squad_stats.csv"
-
-primary_monitor = None
-for m in get_monitors():
-    if m.is_primary:
-        primary_monitor = m
-        break
-
-SUMMARY_ROI = (
-    primary_monitor.width / 3,
-    0,
-    2 / 3 * primary_monitor.width,
-    primary_monitor.height / 10,
-)
-
-TOTAL_KILLS_ROI = (
-    primary_monitor.width * 5 / 6,
-    primary_monitor.height / 10,
-    primary_monitor.width,
-    primary_monitor.height * 2 / 10,
-)
-
-TOP_SCREEN = (
-    primary_monitor.x,
-    primary_monitor.y,
-    primary_monitor.x + primary_monitor.width,
-    primary_monitor.y + primary_monitor.height,
-)
 
 # Database output
 DATABASE = False
