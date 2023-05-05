@@ -79,7 +79,7 @@ if __name__ == "__main__":
         force=True,
         handlers=[
             RichHandler(
-                omit_repeated_times=False, show_path=False, rich_tracebacks=True
+                omit_repeated_times=False, rich_tracebacks=True
             )
         ],
     )

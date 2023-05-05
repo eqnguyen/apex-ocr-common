@@ -105,10 +105,10 @@ class ApexOCREngine:
             try:
                 return int(parts[0]), int(parts[1]), int(parts[2])
             except ValueError as e:
-                logger.error(f"{e}")
+                logger.debug(f"Kills/Assists/Knocks misinterpreted: {parts}")
                 return -1, -1, -1
         else:
-            logger.warning(f"Kills/Assists/Knocks misinterpreted: {parts}")
+            logger.debug(f"Kills/Assists/Knocks misinterpreted: {parts}")
             return -1, -1, -1
 
     @staticmethod
