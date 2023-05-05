@@ -324,21 +324,13 @@ class ApexOCREngine:
 
         # Get text from the images
         place_text = self.text_from_image_paddleocr(squad_place, blur_amount)
-        total_kills_text = self.text_from_image_tesseract(
-            total_kills, blur_amount, TESSERACT_BLOCK_CONFIG
-        ) # Want to replace tesseract here but PaddleOCR can't handle squad kills of 1 :(
 
         # Get squad placement
         matches["Place"].extend(
             replace_nondigits(SQUAD_SUMMARY_MAP["Place"].findall(place_text))
         )
 
-        # Get squad kills
-        matches["Squad Kills"].extend(
-            replace_nondigits(
-                SQUAD_SUMMARY_MAP["Squad Kills"].findall(total_kills_text)
-            )
-        )
+        squad_kills = 0
 
         # Get individual player stat
         for player, player_dict in players.items():
@@ -353,6 +345,7 @@ class ApexOCREngine:
             # Get player kills/assists/knockdowns
             kakn_text = self.text_from_image_paddleocr(player_dict["kakn"], blur_amount)
             kills, assists, knocks = self.process_kakn(kakn_text)
+            squad_kills += kills
             matches[player.upper() + " Kills"].append(kills)
             matches[player.upper() + " Assists"].append(assists)
             matches[player.upper() + " Knocks"].append(knocks)
@@ -382,6 +375,9 @@ class ApexOCREngine:
                 blur_amount,
             )
             matches[player.upper() + " Respawns"].append(respawn_text)
+
+        # Get squad kills
+        matches["Squad Kills"].append(squad_kills)
 
     def process_screenshot(self, image: Union[Path, np.ndarray, None] = None) -> None:
         summary_type = self.classify_summary_page(image)
