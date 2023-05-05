@@ -294,7 +294,11 @@ class ApexOCREngine:
         return results_dict
 
     def process_squad_summary_page_helper(
-        self, img: Image, blur_amount: int, matches: DefaultDict, debug: bool = False
+        self,
+        img: Image.Image,
+        blur_amount: int,
+        matches: DefaultDict,
+        debug: bool = False,
     ):
         if img is None:
             logger.error(f"img is None")
