@@ -105,38 +105,38 @@ def calculate_rois():
     )
 
     # Player 1
-    ROI_DICT["p1"] = {}
-    ROI_DICT["p1"]["player"] = (
+    ROI_DICT["P1"] = {}
+    ROI_DICT["P1"]["player"] = (
         ROI_VARS["P1_COL_START"],
         ROI_VARS["PLAYER_ROW_START"],
         ROI_VARS["P1_COL_START"] + ROI_VARS["PLAYER_WIDTH"],
         ROI_VARS["PLAYER_ROW_START"] + ROI_VARS["PLAYER_ROW_HEIGHT"],
     )
-    ROI_DICT["p1"]["kakn"] = (
+    ROI_DICT["P1"]["kakn"] = (
         ROI_VARS["P1_COL_START"],
         ROI_VARS["KAKN_ROW_START"],
         ROI_VARS["P1_COL_START"] + ROI_VARS["KAKN_WIDTH"],
         ROI_VARS["KAKN_ROW_START"] + ROI_VARS["PLAYER_ROW_HEIGHT"],
     )
-    ROI_DICT["p1"]["damage"] = (
+    ROI_DICT["P1"]["damage"] = (
         ROI_VARS["P1_COL_START"],
         ROI_VARS["DAMAGE_ROW_START"],
         ROI_VARS["P1_COL_START"] + ROI_VARS["DAMAGE_WIDTH"],
         ROI_VARS["DAMAGE_ROW_START"] + ROI_VARS["PLAYER_ROW_HEIGHT"],
     )
-    ROI_DICT["p1"]["survival_time"] = (
+    ROI_DICT["P1"]["survival_time"] = (
         ROI_VARS["P1_COL_START"],
         ROI_VARS["SURV_TIME_ROW_START"],
         ROI_VARS["P1_COL_START"] + ROI_VARS["SURV_TIME_WIDTH"],
         ROI_VARS["SURV_TIME_ROW_START"] + ROI_VARS["PLAYER_ROW_HEIGHT"],
     )
-    ROI_DICT["p1"]["revives"] = (
+    ROI_DICT["P1"]["revives"] = (
         ROI_VARS["P1_COL_START"],
         ROI_VARS["REV_ROW_START"],
         ROI_VARS["P1_COL_START"] + ROI_VARS["REV_RES_WIDTH"],
         ROI_VARS["REV_ROW_START"] + ROI_VARS["PLAYER_ROW_HEIGHT"],
     )
-    ROI_DICT["p1"]["respawns"] = (
+    ROI_DICT["P1"]["respawns"] = (
         ROI_VARS["P1_COL_START"],
         ROI_VARS["RES_ROW_START"],
         ROI_VARS["P1_COL_START"] + ROI_VARS["REV_RES_WIDTH"],
@@ -144,38 +144,38 @@ def calculate_rois():
     )
 
     # Player 2
-    ROI_DICT["p2"] = {}
-    ROI_DICT["p2"]["player"] = (
+    ROI_DICT["P2"] = {}
+    ROI_DICT["P2"]["player"] = (
         ROI_VARS["P2_COL_START"],
         ROI_VARS["PLAYER_ROW_START"],
         ROI_VARS["P2_COL_START"] + ROI_VARS["PLAYER_WIDTH"],
         ROI_VARS["PLAYER_ROW_START"] + ROI_VARS["PLAYER_ROW_HEIGHT"],
     )
-    ROI_DICT["p2"]["kakn"] = (
+    ROI_DICT["P2"]["kakn"] = (
         ROI_VARS["P2_COL_START"],
         ROI_VARS["KAKN_ROW_START"],
         ROI_VARS["P2_COL_START"] + ROI_VARS["KAKN_WIDTH"],
         ROI_VARS["KAKN_ROW_START"] + ROI_VARS["PLAYER_ROW_HEIGHT"],
     )
-    ROI_DICT["p2"]["damage"] = (
+    ROI_DICT["P2"]["damage"] = (
         ROI_VARS["P2_COL_START"],
         ROI_VARS["DAMAGE_ROW_START"],
         ROI_VARS["P2_COL_START"] + ROI_VARS["DAMAGE_WIDTH"],
         ROI_VARS["DAMAGE_ROW_START"] + ROI_VARS["PLAYER_ROW_HEIGHT"],
     )
-    ROI_DICT["p2"]["survival_time"] = (
+    ROI_DICT["P2"]["survival_time"] = (
         ROI_VARS["P2_COL_START"],
         ROI_VARS["SURV_TIME_ROW_START"],
         ROI_VARS["P2_COL_START"] + ROI_VARS["SURV_TIME_WIDTH"],
         ROI_VARS["SURV_TIME_ROW_START"] + ROI_VARS["PLAYER_ROW_HEIGHT"],
     )
-    ROI_DICT["p2"]["revives"] = (
+    ROI_DICT["P2"]["revives"] = (
         ROI_VARS["P2_COL_START"],
         ROI_VARS["REV_ROW_START"],
         ROI_VARS["P2_COL_START"] + ROI_VARS["REV_RES_WIDTH"],
         ROI_VARS["REV_ROW_START"] + ROI_VARS["PLAYER_ROW_HEIGHT"],
     )
-    ROI_DICT["p2"]["respawns"] = (
+    ROI_DICT["P2"]["respawns"] = (
         ROI_VARS["P2_COL_START"],
         ROI_VARS["RES_ROW_START"],
         ROI_VARS["P2_COL_START"] + ROI_VARS["REV_RES_WIDTH"],
@@ -183,38 +183,38 @@ def calculate_rois():
     )
 
     # Player 3
-    ROI_DICT["p3"] = {}
-    ROI_DICT["p3"]["player"] = (
+    ROI_DICT["P3"] = {}
+    ROI_DICT["P3"]["player"] = (
         ROI_VARS["P3_COL_START"],
         ROI_VARS["PLAYER_ROW_START"],
         ROI_VARS["P3_COL_START"] + ROI_VARS["PLAYER_WIDTH"],
         ROI_VARS["PLAYER_ROW_START"] + ROI_VARS["PLAYER_ROW_HEIGHT"],
     )
-    ROI_DICT["p3"]["kakn"] = (
+    ROI_DICT["P3"]["kakn"] = (
         ROI_VARS["P3_COL_START"],
         ROI_VARS["KAKN_ROW_START"],
         ROI_VARS["P3_COL_START"] + ROI_VARS["KAKN_WIDTH"],
         ROI_VARS["KAKN_ROW_START"] + ROI_VARS["PLAYER_ROW_HEIGHT"],
     )
-    ROI_DICT["p3"]["damage"] = (
+    ROI_DICT["P3"]["damage"] = (
         ROI_VARS["P3_COL_START"],
         ROI_VARS["DAMAGE_ROW_START"],
         ROI_VARS["P3_COL_START"] + ROI_VARS["DAMAGE_WIDTH"],
         ROI_VARS["DAMAGE_ROW_START"] + ROI_VARS["PLAYER_ROW_HEIGHT"],
     )
-    ROI_DICT["p3"]["survival_time"] = (
+    ROI_DICT["P3"]["survival_time"] = (
         ROI_VARS["P3_COL_START"],
         ROI_VARS["SURV_TIME_ROW_START"],
         ROI_VARS["P3_COL_START"] + ROI_VARS["SURV_TIME_WIDTH"],
         ROI_VARS["SURV_TIME_ROW_START"] + ROI_VARS["PLAYER_ROW_HEIGHT"],
     )
-    ROI_DICT["p3"]["revives"] = (
+    ROI_DICT["P3"]["revives"] = (
         ROI_VARS["P3_COL_START"],
         ROI_VARS["REV_ROW_START"],
         ROI_VARS["P3_COL_START"] + ROI_VARS["REV_RES_WIDTH"],
         ROI_VARS["REV_ROW_START"] + ROI_VARS["PLAYER_ROW_HEIGHT"],
     )
-    ROI_DICT["p3"]["respawns"] = (
+    ROI_DICT["P3"]["respawns"] = (
         ROI_VARS["P3_COL_START"],
         ROI_VARS["RES_ROW_START"],
         ROI_VARS["P3_COL_START"] + ROI_VARS["REV_RES_WIDTH"],

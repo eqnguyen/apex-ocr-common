@@ -328,7 +328,7 @@ class ApexOCREngine:
         # Get individual player stat
         for player, player_dict in players.items():
             # Get player username
-            matches[player.upper()].append(
+            matches[player].append(
                 self.text_from_image_paddleocr(
                     player_dict["player"],
                     blur_amount,
@@ -338,12 +338,12 @@ class ApexOCREngine:
             # Get player kills/assists/knockdowns
             kakn_text = self.text_from_image_paddleocr(player_dict["kakn"], blur_amount)
             kills, assists, knocks = self.process_kakn(kakn_text)
-            matches[f"{player.upper()} Kills"].append(kills)
-            matches[f"{player.upper()} Assists"].append(assists)
-            matches[f"{player.upper()} Knocks"].append(knocks)
+            matches[f"{player} Kills"].append(kills)
+            matches[f"{player} Assists"].append(assists)
+            matches[f"{player} Knocks"].append(knocks)
 
             # Get player damage
-            matches[f"{player.upper()} Damage"].append(
+            matches[f"{player} Damage"].append(
                 self.text_from_image_paddleocr(player_dict["damage"], blur_amount)
             )
 
@@ -353,20 +353,20 @@ class ApexOCREngine:
             )
             if len(time_text) >= 3 and ":" not in time_text:
                 time_text = ":".join([time_text[:-2], time_text[-2:]])
-            matches[f"{player.upper()} Time Survived"].append(time_text)
+            matches[f"{player} Time Survived"].append(time_text)
 
             # Get player revives
             revive_text = self.text_from_image_paddleocr(
                 player_dict["revives"], blur_amount
             )
-            matches[f"{player.upper()} Revives"].append(revive_text)
+            matches[f"{player} Revives"].append(revive_text)
 
             # Get player respawns
             respawn_text = self.text_from_image_paddleocr(
                 player_dict["respawns"],
                 blur_amount,
             )
-            matches[f"{player.upper()} Respawns"].append(respawn_text)
+            matches[f"{player} Respawns"].append(respawn_text)
 
     def process_screenshot(self, image: Union[Path, np.ndarray, None] = None) -> None:
         summary_type = self.classify_summary_page(image)
