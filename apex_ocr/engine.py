@@ -129,20 +129,22 @@ class ApexOCREngine:
 
         return time_survived_list
 
-    @staticmethod
     def classify_summary_page(
-        image: Union[Path, np.ndarray, None] = None, debug: bool = False
+        self, input: Union[Path, np.ndarray, None] = None, debug: bool = False
     ) -> Union[SummaryType, None]:
-        if image:
-            if isinstance(image, np.ndarray):
-                image = Image.fromarray(image)
-            elif isinstance(image, Path):
-                image = Image.open(str(image))
+        if input:
+            if isinstance(input, np.ndarray):
+                image = Image.fromarray(input)
+            elif isinstance(input, Path):
+                image = Image.open(str(input))
         else:
             image = ImageGrab.grab(bbox=TOP_SCREEN)
 
-        total_kills_img = np.array(image.crop(TOTAL_KILLS_ROI))
         summary_img = np.array(image.crop(SUMMARY_ROI))
+        total_kills_img = np.array(image.crop(TOTAL_KILLS_ROI))
+
+        summary_text = self.text_from_image_paddleocr(summary_img, blur_amount=3)
+        kills_text = self.text_from_image_paddleocr(total_kills_img, blur_amount=3)
 
         if debug:
             image.save(
@@ -150,24 +152,11 @@ class ApexOCREngine:
                 / f"raw_{datetime.utcnow().strftime('%Y-%m-%d_%H-%M-%S')}.png"
             )
 
-        total_kills_img = ApexOCREngine.preprocess_image(total_kills_img, blur_amount=3)
-        summary_img = ApexOCREngine.preprocess_image(summary_img, blur_amount=3)
-
-        if debug:
             Image.fromarray(total_kills_img).save(
                 DATA_DIRECTORY
                 / f"preprocessed_{datetime.utcnow().strftime('%Y-%m-%d_%H-%M-%S')}.png"
             )
 
-        summary_text = pytesseract.image_to_string(summary_img, config=TESSERACT_CONFIG)
-        summary_text = summary_text.replace("\n", "").replace(" ", "").lower()
-
-        kills_text = pytesseract.image_to_string(
-            total_kills_img, config=TESSERACT_CONFIG
-        )
-        kills_text = kills_text.replace("\n", "").replace(" ", "").lower()
-
-        if debug:
             with open(
                 DATA_DIRECTORY
                 / f"text_{datetime.utcnow().strftime('%Y-%m-%d_%H-%M-%S')}.txt",
@@ -386,7 +375,7 @@ class ApexOCREngine:
             matches[player.upper() + " Respawns"].append(respawn_text)
 
     def process_screenshot(self, image: Union[Path, np.ndarray, None] = None) -> None:
-        summary_type = ApexOCREngine.classify_summary_page(image)
+        summary_type = self.classify_summary_page(image)
         results_dict = {}
 
         if summary_type == SummaryType.PERSONAL:
