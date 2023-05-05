@@ -354,25 +354,26 @@ class ApexOCREngine:
         # Get individual player stat
         for player, player_dict in players.items():
             # Get player username
-            matches[player].append(
-                self.text_from_image_paddleocr(
-                    player_dict["player"],
-                    blur_amount,
-                )
+            player_name_text = self.text_from_image_paddleocr(
+                player_dict["player"],
+                blur_amount,
             )
+            matches[player].append(player_name_text)
 
             # Get player kills/assists/knockdowns
             kakn_text = self.text_from_image_paddleocr(player_dict["kakn"], blur_amount)
             kills, assists, knocks = self.process_kakn(kakn_text)
             squad_kills += kills
+
             matches[f"{player} Kills"].append(kills)
             matches[f"{player} Assists"].append(assists)
             matches[f"{player} Knocks"].append(knocks)
 
             # Get player damage
-            matches[f"{player} Damage"].append(
-                self.text_from_image_paddleocr(player_dict["damage"], blur_amount)
+            damage_text = self.text_from_image_paddleocr(
+                player_dict["damage"], blur_amount
             )
+            matches[f"{player} Damage"].append(int(damage_text))
 
             # Get player survival time
             time_text = self.text_from_image_paddleocr(
@@ -386,14 +387,14 @@ class ApexOCREngine:
             revive_text = self.text_from_image_paddleocr(
                 player_dict["revives"], blur_amount
             )
-            matches[f"{player} Revives"].append(revive_text)
+            matches[f"{player} Revives"].append(int(revive_text))
 
             # Get player respawns
             respawn_text = self.text_from_image_paddleocr(
                 player_dict["respawns"],
                 blur_amount,
             )
-            matches[f"{player} Respawns"].append(respawn_text)
+            matches[f"{player} Respawns"].append(int(respawn_text))
 
         # Get squad kills
         matches["Squad Kills"].append(squad_kills)
