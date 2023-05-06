@@ -36,10 +36,6 @@ class ApexDatabaseApi:
 
     def push_results(self, results: dict) -> None:
         # TODO: Handle different match types
-
-        # Batch objects to add for atomic actions
-        add_list = []
-
         # Commit match result
         match_result = MatchResult(
             datetime=results["Datetime"],
@@ -48,7 +44,15 @@ class ApexDatabaseApi:
             hash=results["Hash"],
         )
 
-        add_list.append(match_result)
+        try:
+            self.add(match_result)
+        except IntegrityError:
+            logger.info("Duplicate match results found in database!")
+            self.session.rollback()
+            return
+
+        # Batch add player match result objects
+        add_list = []
 
         for p_num in ["P1", "P2", "P3"]:
             # Commit players if not already in database
@@ -60,8 +64,8 @@ class ApexDatabaseApi:
                 player = Player(name=player_name)
                 self.add(player)
 
-            # Commit match player results
             try:
+                # Convert string time format to seconds
                 time_survived = time_survived_to_seconds(
                     results[f"{p_num} Time Survived"]
                 )
@@ -69,6 +73,7 @@ class ApexDatabaseApi:
                 logger.error(e)
                 break
 
+            # Create match player result object to add to database
             player_match_result = PlayerMatchResult(
                 player_id=player.id,
                 match_id=match_result.id,
@@ -83,13 +88,9 @@ class ApexDatabaseApi:
 
             add_list.append(player_match_result)
         else:
-            # Add match result and match player results if loop did not break
+            # Add match player results if loop did not break
             try:
                 self.add_all(add_list)
-            except IntegrityError:
-                logger.info("Duplicate match results found in database!")
-                self.session.rollback()
-                return
             except DataError as e:
                 logger.error(e)
                 self.session.rollback()
