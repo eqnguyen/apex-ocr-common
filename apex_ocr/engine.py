@@ -378,9 +378,15 @@ class ApexOCREngine:
             damage_text = self.text_from_image_paddleocr(
                 player_dict["damage"], blur_amount
             )
-            matches[f"{player} Damage"].append(int(damage_text))
+            try:
+                damage = int(damage_text)
+            except ValueError:
+                logger.debug(f"Damage misinterpreted: {damage_text}")
+                damage = -1
+            matches[f"{player} Damage"].append(damage)
 
             # Get player survival time
+            # TODO: Add validation to survival time text
             time_text = self.text_from_image_paddleocr(
                 player_dict["survival_time"], blur_amount
             )
@@ -392,14 +398,24 @@ class ApexOCREngine:
             revive_text = self.text_from_image_paddleocr(
                 player_dict["revives"], blur_amount
             )
-            matches[f"{player} Revives"].append(int(revive_text))
+            try:
+                revives = int(revive_text)
+            except ValueError:
+                logger.debug(f"Revives misinterpreted: {revive_text}")
+                revives = -1
+            matches[f"{player} Revives"].append(revives)
 
             # Get player respawns
             respawn_text = self.text_from_image_paddleocr(
                 player_dict["respawns"],
                 blur_amount,
             )
-            matches[f"{player} Respawns"].append(int(respawn_text))
+            try:
+                respawns = int(respawn_text)
+            except ValueError:
+                logger.debug(f"Respawns misinterpreted: {respawn_text}")
+                respawns = -1
+            matches[f"{player} Respawns"].append(respawns)
 
         # Get squad kills
         matches["Squad Kills"].append(squad_kills)
