@@ -2,7 +2,7 @@ import enum
 import logging
 import re
 from collections import Counter, defaultdict
-from datetime import datetime
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import DefaultDict, List, Tuple, Union
 
@@ -263,21 +263,26 @@ class ApexOCREngine:
         return text
 
     def process_squad_summary_page(
-        self, image: Union[Path, np.ndarray, None] = None, debug: bool = False
+        self, image: Union[Path, None] = None, debug: bool = False
     ) -> dict:
+        results_dict = defaultdict(None)
+
         if image:
-            if isinstance(image, np.ndarray):
-                dup_images = [Image.fromarray(image)] * self.num_images
-            elif isinstance(image, Path):
-                dup_images = [Image.open(image)] * self.num_images
+            pil_image = Image.open(image)
+            dup_images = [pil_image] * self.num_images
+
+            # Screenshots do not have EXIF data so must resort to file OS stats
+            results_dict["Datetime"] = datetime.fromtimestamp(
+                image.stat().st_ctime, tz=timezone.utc
+            )
+
         else:
             # Take duplicate images immediately to get the most common interpretation
             dup_images = [
                 ImageGrab.grab(bbox=TOP_SCREEN) for _ in range(self.num_images)
             ]
+            results_dict["Datetime"] = datetime.utcnow()
 
-        results_dict = defaultdict(None)
-        results_dict["Datetime"] = datetime.utcnow()
         matches = defaultdict(list)
 
         if debug:
@@ -399,7 +404,7 @@ class ApexOCREngine:
         # Get squad kills
         matches["Squad Kills"].append(squad_kills)
 
-    def process_screenshot(self, image: Union[Path, np.ndarray, None] = None) -> None:
+    def process_screenshot(self, image: Union[Path, None] = None) -> None:
         summary_type = self.classify_summary_page(image)
         results_dict = {}
 
@@ -410,8 +415,11 @@ class ApexOCREngine:
             results_dict = self.process_squad_summary_page(image)
 
         if results_dict:
+            # Compute hash of results
             d = ApexOCREngine.reformat_results(results_dict)
             results_dict["Hash"] = utils.hash_dict(d)
+
+            # Print results to console
             utils.display_results(results_dict)
 
             if ApexOCREngine.is_valid_results(results_dict):
