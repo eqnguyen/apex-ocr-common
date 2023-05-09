@@ -2,7 +2,6 @@ import csv
 import hashlib
 import json
 import logging
-import winsound
 from typing import List
 
 import numpy as np
