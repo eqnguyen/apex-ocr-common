@@ -1,18 +1,44 @@
-from typing import Tuple
+import logging
+from datetime import datetime
+from typing import Tuple, Union
 
 import numpy as np
+from PIL import ImageDraw
 from PIL.Image import Image
-import logging
 
-from screeninfo import get_monitors
+from apex_ocr.config import DATA_DIRECTORY
+from apex_ocr.utils import get_primary_monitor
 
 logger = logging.getLogger(__name__)
 
 # Resolution: 1920 x 1080
 # Regions of interest
+
+PRIMARY_MONITOR = get_primary_monitor()
+
+SUMMARY_ROI = (
+    PRIMARY_MONITOR.width // 3,
+    0,
+    PRIMARY_MONITOR.width * 2 // 3,
+    PRIMARY_MONITOR.height // 10,
+)
+
+TOTAL_KILLS_ROI = (
+    PRIMARY_MONITOR.width * 5 // 6,
+    PRIMARY_MONITOR.height // 10,
+    PRIMARY_MONITOR.width,
+    PRIMARY_MONITOR.height * 2 // 10,
+)
+
+TOP_SCREEN = (
+    PRIMARY_MONITOR.x,
+    PRIMARY_MONITOR.y,
+    PRIMARY_MONITOR.x + PRIMARY_MONITOR.width,
+    PRIMARY_MONITOR.y + PRIMARY_MONITOR.height,
+)
+
 ROI_DICT = {}
 SQUAD_PLACE_ROI = ()
-TOTAL_KILLS_ROI = ()
 
 ROI_VARS = {
     "TOP_ROW_START": 120,
@@ -39,31 +65,20 @@ ROI_VARS = {
 }
 
 
-def scale_rois(resolution: Tuple[int, int] = None):
+def scale_rois(resolution: Union[Tuple[int, int], None] = None):
     # resolution means we are analyzing screenshot(s)
     if resolution:
         width, height = resolution
     else:
-        # live
-        for m in get_monitors():
-            primary_monitor = None
-            if m.is_primary:
-                primary_monitor = m
-                break
-
-        width, height = primary_monitor.width, primary_monitor.height
+        width, height = PRIMARY_MONITOR.width, PRIMARY_MONITOR.height
 
     for key, val in ROI_VARS.items():
-        if "WIDTH" in key:
-            ROI_VARS[key] = val / 1920 * width
-        elif "COL" in key:
+        if "WIDTH" in key or "COL" in key:
             # scale by width
-            ROI_VARS[key] = val / 1920 * width
-        elif "HEIGHT" in key:
-            ROI_VARS[key] = val / 1080 * height
-        elif "ROW" in key:
+            ROI_VARS[key] = val * width // 1920
+        elif "HEIGHT" in key or "ROW" in key:
             # scale by height
-            ROI_VARS[key] = val / 1080 * height
+            ROI_VARS[key] = val * height // 1080
         else:
             logger.error(f"Unknown var: {key}")
 
@@ -90,38 +105,38 @@ def calculate_rois():
     )
 
     # Player 1
-    ROI_DICT["p1"] = {}
-    ROI_DICT["p1"]["player"] = (
+    ROI_DICT["P1"] = {}
+    ROI_DICT["P1"]["player"] = (
         ROI_VARS["P1_COL_START"],
         ROI_VARS["PLAYER_ROW_START"],
         ROI_VARS["P1_COL_START"] + ROI_VARS["PLAYER_WIDTH"],
         ROI_VARS["PLAYER_ROW_START"] + ROI_VARS["PLAYER_ROW_HEIGHT"],
     )
-    ROI_DICT["p1"]["kakn"] = (
+    ROI_DICT["P1"]["kakn"] = (
         ROI_VARS["P1_COL_START"],
         ROI_VARS["KAKN_ROW_START"],
         ROI_VARS["P1_COL_START"] + ROI_VARS["KAKN_WIDTH"],
         ROI_VARS["KAKN_ROW_START"] + ROI_VARS["PLAYER_ROW_HEIGHT"],
     )
-    ROI_DICT["p1"]["damage"] = (
+    ROI_DICT["P1"]["damage"] = (
         ROI_VARS["P1_COL_START"],
         ROI_VARS["DAMAGE_ROW_START"],
         ROI_VARS["P1_COL_START"] + ROI_VARS["DAMAGE_WIDTH"],
         ROI_VARS["DAMAGE_ROW_START"] + ROI_VARS["PLAYER_ROW_HEIGHT"],
     )
-    ROI_DICT["p1"]["survival_time"] = (
+    ROI_DICT["P1"]["survival_time"] = (
         ROI_VARS["P1_COL_START"],
         ROI_VARS["SURV_TIME_ROW_START"],
         ROI_VARS["P1_COL_START"] + ROI_VARS["SURV_TIME_WIDTH"],
         ROI_VARS["SURV_TIME_ROW_START"] + ROI_VARS["PLAYER_ROW_HEIGHT"],
     )
-    ROI_DICT["p1"]["revives"] = (
+    ROI_DICT["P1"]["revives"] = (
         ROI_VARS["P1_COL_START"],
         ROI_VARS["REV_ROW_START"],
         ROI_VARS["P1_COL_START"] + ROI_VARS["REV_RES_WIDTH"],
         ROI_VARS["REV_ROW_START"] + ROI_VARS["PLAYER_ROW_HEIGHT"],
     )
-    ROI_DICT["p1"]["respawns"] = (
+    ROI_DICT["P1"]["respawns"] = (
         ROI_VARS["P1_COL_START"],
         ROI_VARS["RES_ROW_START"],
         ROI_VARS["P1_COL_START"] + ROI_VARS["REV_RES_WIDTH"],
@@ -129,38 +144,38 @@ def calculate_rois():
     )
 
     # Player 2
-    ROI_DICT["p2"] = {}
-    ROI_DICT["p2"]["player"] = (
+    ROI_DICT["P2"] = {}
+    ROI_DICT["P2"]["player"] = (
         ROI_VARS["P2_COL_START"],
         ROI_VARS["PLAYER_ROW_START"],
         ROI_VARS["P2_COL_START"] + ROI_VARS["PLAYER_WIDTH"],
         ROI_VARS["PLAYER_ROW_START"] + ROI_VARS["PLAYER_ROW_HEIGHT"],
     )
-    ROI_DICT["p2"]["kakn"] = (
+    ROI_DICT["P2"]["kakn"] = (
         ROI_VARS["P2_COL_START"],
         ROI_VARS["KAKN_ROW_START"],
         ROI_VARS["P2_COL_START"] + ROI_VARS["KAKN_WIDTH"],
         ROI_VARS["KAKN_ROW_START"] + ROI_VARS["PLAYER_ROW_HEIGHT"],
     )
-    ROI_DICT["p2"]["damage"] = (
+    ROI_DICT["P2"]["damage"] = (
         ROI_VARS["P2_COL_START"],
         ROI_VARS["DAMAGE_ROW_START"],
         ROI_VARS["P2_COL_START"] + ROI_VARS["DAMAGE_WIDTH"],
         ROI_VARS["DAMAGE_ROW_START"] + ROI_VARS["PLAYER_ROW_HEIGHT"],
     )
-    ROI_DICT["p2"]["survival_time"] = (
+    ROI_DICT["P2"]["survival_time"] = (
         ROI_VARS["P2_COL_START"],
         ROI_VARS["SURV_TIME_ROW_START"],
         ROI_VARS["P2_COL_START"] + ROI_VARS["SURV_TIME_WIDTH"],
         ROI_VARS["SURV_TIME_ROW_START"] + ROI_VARS["PLAYER_ROW_HEIGHT"],
     )
-    ROI_DICT["p2"]["revives"] = (
+    ROI_DICT["P2"]["revives"] = (
         ROI_VARS["P2_COL_START"],
         ROI_VARS["REV_ROW_START"],
         ROI_VARS["P2_COL_START"] + ROI_VARS["REV_RES_WIDTH"],
         ROI_VARS["REV_ROW_START"] + ROI_VARS["PLAYER_ROW_HEIGHT"],
     )
-    ROI_DICT["p2"]["respawns"] = (
+    ROI_DICT["P2"]["respawns"] = (
         ROI_VARS["P2_COL_START"],
         ROI_VARS["RES_ROW_START"],
         ROI_VARS["P2_COL_START"] + ROI_VARS["REV_RES_WIDTH"],
@@ -168,38 +183,38 @@ def calculate_rois():
     )
 
     # Player 3
-    ROI_DICT["p3"] = {}
-    ROI_DICT["p3"]["player"] = (
+    ROI_DICT["P3"] = {}
+    ROI_DICT["P3"]["player"] = (
         ROI_VARS["P3_COL_START"],
         ROI_VARS["PLAYER_ROW_START"],
         ROI_VARS["P3_COL_START"] + ROI_VARS["PLAYER_WIDTH"],
         ROI_VARS["PLAYER_ROW_START"] + ROI_VARS["PLAYER_ROW_HEIGHT"],
     )
-    ROI_DICT["p3"]["kakn"] = (
+    ROI_DICT["P3"]["kakn"] = (
         ROI_VARS["P3_COL_START"],
         ROI_VARS["KAKN_ROW_START"],
         ROI_VARS["P3_COL_START"] + ROI_VARS["KAKN_WIDTH"],
         ROI_VARS["KAKN_ROW_START"] + ROI_VARS["PLAYER_ROW_HEIGHT"],
     )
-    ROI_DICT["p3"]["damage"] = (
+    ROI_DICT["P3"]["damage"] = (
         ROI_VARS["P3_COL_START"],
         ROI_VARS["DAMAGE_ROW_START"],
         ROI_VARS["P3_COL_START"] + ROI_VARS["DAMAGE_WIDTH"],
         ROI_VARS["DAMAGE_ROW_START"] + ROI_VARS["PLAYER_ROW_HEIGHT"],
     )
-    ROI_DICT["p3"]["survival_time"] = (
+    ROI_DICT["P3"]["survival_time"] = (
         ROI_VARS["P3_COL_START"],
         ROI_VARS["SURV_TIME_ROW_START"],
         ROI_VARS["P3_COL_START"] + ROI_VARS["SURV_TIME_WIDTH"],
         ROI_VARS["SURV_TIME_ROW_START"] + ROI_VARS["PLAYER_ROW_HEIGHT"],
     )
-    ROI_DICT["p3"]["revives"] = (
+    ROI_DICT["P3"]["revives"] = (
         ROI_VARS["P3_COL_START"],
         ROI_VARS["REV_ROW_START"],
         ROI_VARS["P3_COL_START"] + ROI_VARS["REV_RES_WIDTH"],
         ROI_VARS["REV_ROW_START"] + ROI_VARS["PLAYER_ROW_HEIGHT"],
     )
-    ROI_DICT["p3"]["respawns"] = (
+    ROI_DICT["P3"]["respawns"] = (
         ROI_VARS["P3_COL_START"],
         ROI_VARS["RES_ROW_START"],
         ROI_VARS["P3_COL_START"] + ROI_VARS["REV_RES_WIDTH"],
@@ -209,12 +224,8 @@ def calculate_rois():
 
 def get_rois(img: Image, debug: bool = False) -> Tuple[np.ndarray, dict]:
     if debug:
-        from apex_ocr.config import DATA_DIRECTORY
-        from datetime import datetime
-        from PIL import ImageDraw
-
         draw = ImageDraw.Draw(img)
-        draw.rectangle([0, 0, 50, 50], width=3)
+        draw.rectangle((0, 0, 50, 50), width=3)
         draw.rectangle(SQUAD_PLACE_ROI, width=3)
         img.save(
             DATA_DIRECTORY

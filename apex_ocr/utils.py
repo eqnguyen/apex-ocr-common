@@ -2,6 +2,7 @@ import csv
 import hashlib
 import json
 import logging
+from pathlib import Path
 from typing import List
 
 import numpy as np
@@ -11,8 +12,7 @@ from rich.columns import Columns
 from rich.console import Console
 from rich.panel import Panel
 from rich.table import Table
-
-from apex_ocr.config import *
+from screeninfo import Monitor, get_monitors
 
 logger = logging.getLogger(__name__)
 console = Console()
@@ -35,44 +35,17 @@ REPLACEMENTS = [
     ('"', ""),
 ]
 
-try:
-    import winsound
-except ImportError:
-    import os
 
-    def beep(beep_freq: int = 500, duration: float = 0.05, volume: float = 0.5) -> int:
-        return os.system(
-            f"play -q -n -t alsa synth {duration} sine {beep_freq} vol {volume}"
-        )
+def get_primary_monitor() -> Monitor:
+    primary_monitor = Monitor(0, 0, 0, 0)
+    for m in get_monitors():
+        if m.is_primary:
+            primary_monitor = m
+            break
+    else:
+        logger.exception("No primary monitor detected!")
 
-    # test if beep is able to run
-    return_code = beep(volume=0)
-    if return_code != 0:
-        if return_code == 32512:
-            logger.error(
-                f"The package sox is not installed. Please install it ('sudo apt install sox')"
-            )
-        else:
-            logger.error(
-                f"sox appears to be installed, but there was some other problem with it {return_code=}"
-            )
-
-        def bad_beep(beep_freq: int = 500, duration: float = 0.05, volume: float = 0.5):
-            logger.warning(f"Beep not available on this system")
-            return -1
-
-        beep = bad_beep
-
-else:
-
-    def beep(beep_freq: int = 500, duration: float = 0.05, volume: float = 0.5) -> int:
-        return winsound.Beep(beep_freq, 500)
-
-
-def log_and_beep(print_text: str, beep_freq: int) -> None:
-    logger.info(print_text)
-    if beep_freq:
-        beep(beep_freq)
+    return primary_monitor
 
 
 def display_results(results: dict) -> None:
@@ -94,7 +67,7 @@ def display_results(results: dict) -> None:
             "Revives",
             "Respawns",
         ]:
-            player_tables[i].add_row(stat, str(results[player + " " + stat]))
+            player_tables[i].add_row(stat, str(results[f"{player} {stat}"]))
 
     panel = Panel(
         Align.center(Columns(player_tables)),
@@ -103,7 +76,8 @@ def display_results(results: dict) -> None:
         expand=False,
         subtitle=results["Hash"],
     )
-    console.print(f"\n{panel}")
+    console.print("\n")
+    console.print(panel)
 
 
 def replace_nondigits(parsed_string: List[str]) -> List[int]:
@@ -147,7 +121,12 @@ def time_survived_to_seconds(survival_time: str) -> int:
     split_text = survival_time.split(":")
 
     for i, value in enumerate(reversed(split_text)):
-        time_survived += (60**i) * int(value)
+        try:
+            time_survived += (60**i) * int(value)
+        except ValueError:
+            raise ValueError(
+                f"ValueError: Invalid survival time string: {survival_time}"
+            )
 
     return time_survived
 

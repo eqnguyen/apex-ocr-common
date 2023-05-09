@@ -94,7 +94,7 @@ class MatchResult(Base):
     __tablename__ = "match_result"
 
     id = Column(Integer, primary_key=True)
-    datetime = Column(DateTime, nullable=False)
+    datetime = Column(DateTime(timezone=True), nullable=False)
     match_type = Column(Enum(MatchType), nullable=False)
     place = Column(Integer)
     result = Column(Enum(WinLoss))

@@ -1,8 +1,9 @@
 import logging
 import time
-from PIL import Image
+from pathlib import Path
 
 import click
+from PIL import Image
 from rich.logging import RichHandler
 from rich.progress import (
     BarColumn,
@@ -14,9 +15,8 @@ from rich.progress import (
     TimeRemainingColumn,
 )
 
-from apex_ocr.config import *
+from apex_ocr.config import IMAGE_EXTENSIONS
 from apex_ocr.engine import ApexOCREngine
-from apex_ocr.utils import *
 from apex_ocr.roi import scale_rois
 
 logging.captureWarnings(True)
@@ -77,11 +77,7 @@ if __name__ == "__main__":
         format=" %(name)s | %(message)s",
         datefmt="%Y-%m-%d %H:%M:%S",
         force=True,
-        handlers=[
-            RichHandler(
-                omit_repeated_times=False, show_path=False, rich_tracebacks=True
-            )
-        ],
+        handlers=[RichHandler(omit_repeated_times=False, rich_tracebacks=True)],
     )
 
     try:

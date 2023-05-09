@@ -2,20 +2,26 @@ import enum
 import logging
 import re
 from collections import Counter, defaultdict
-from datetime import datetime
+from datetime import datetime, timezone
+from pathlib import Path
 from typing import DefaultDict, List, Tuple, Union
 
 import numpy as np
 import yaml
+from joblib import Parallel, delayed, parallel_backend
 from paddleocr import PaddleOCR
 from PIL import Image, ImageGrab
 
-from apex_ocr.config import *
+from apex_ocr import utils
+from apex_ocr.config import (
+    DATA_DIRECTORY,
+    DATABASE,
+    DATABASE_YML_FILE,
+    SQUAD_STATS_FILE,
+)
 from apex_ocr.database.api import ApexDatabaseApi
-from apex_ocr.preprocessing import *
-from apex_ocr.roi import get_rois
-from apex_ocr.utils import *
-import re
+from apex_ocr.preprocessing import preprocess_image
+from apex_ocr.roi import SUMMARY_ROI, TOP_SCREEN, TOTAL_KILLS_ROI, get_rois
 
 logger = logging.getLogger(__name__)
 
@@ -26,6 +32,37 @@ class SummaryType(enum.Enum):
 
 
 class ApexOCREngine:
+    squad_summary_headers = [
+        "Datetime",
+        "Place",
+        "Squad Kills",
+        "P1",
+        "P1 Kills",
+        "P1 Assists",
+        "P1 Knocks",
+        "P1 Damage",
+        "P1 Time Survived",
+        "P1 Revives",
+        "P1 Respawns",
+        "P2",
+        "P2 Kills",
+        "P2 Assists",
+        "P2 Knocks",
+        "P2 Damage",
+        "P2 Time Survived",
+        "P2 Revives",
+        "P2 Respawns",
+        "P3",
+        "P3 Kills",
+        "P3 Assists",
+        "P3 Knocks",
+        "P3 Damage",
+        "P3 Time Survived",
+        "P3 Revives",
+        "P3 Respawns",
+        "Hash",
+    ]
+
     def __init__(self, n_images_per_blur: int = 1, blur_levels=[0, 3, 5, 7]) -> None:
         self.paddle_ocr = PaddleOCR(
             use_angle_cls=True, lang="en", show_log=False, debug=False
@@ -37,17 +74,10 @@ class ApexOCREngine:
 
         self.num_images = len(self.blurs)
 
-        self.initialize_database_engine()
-
-    @staticmethod
-    def preprocess_image(image: np.ndarray, blur_amount: int = 0) -> np.ndarray:
-        grayscale_img = grayscale(image)
-        threshold_img = thresholding(grayscale_img)
-
-        if blur_amount > 0:
-            return cv2.GaussianBlur(threshold_img, (blur_amount, blur_amount), 0)
+        if DATABASE:
+            self.db_conn = self.get_database_session()
         else:
-            return threshold_img
+            self.db_conn = None
 
     @staticmethod
     def reformat_results(results: dict) -> dict:
@@ -80,13 +110,37 @@ class ApexOCREngine:
                 "Respawns",
             ]:
                 reformatted_dict["players"][player_name] = reformatted_dict[
-                    player + " " + field
+                    f"{player} {field}"
                 ]
 
                 # Remove key from dictionary
-                del reformatted_dict[player + " " + field]
+                del reformatted_dict[f"{player} {field}"]
 
         return reformatted_dict
+
+    @staticmethod
+    def is_valid_results(results: dict) -> bool:
+        # Check for empty results dictionary
+        if not results:
+            logger.error("Empty results!")
+            return False
+
+        # Check for "n/a" in squad placement
+        if "n/a" in results.values():
+            logger.error("N/A found in results!")
+            return False
+
+        # Check for any fields with empty strings
+        if "" in results.values():
+            logger.error("Empty string in results!")
+            return False
+
+        # Check for invalid kills / assists / knockdowns
+        if -1 in results.values():
+            logger.error("Inalid Kills/Assists/Knocks in results!")
+            return False
+
+        return True
 
     @staticmethod
     def process_kakn(text: str) -> Tuple[int, int, int]:
@@ -104,10 +158,10 @@ class ApexOCREngine:
             try:
                 return int(parts[0]), int(parts[1]), int(parts[2])
             except ValueError as e:
-                logger.error(f"{e}")
+                logger.debug(f"Kills/Assists/Knocks misinterpreted: {parts}")
                 return -1, -1, -1
         else:
-            logger.warning(f"Kills/Assists/Knocks misinterpreted: {parts}")
+            logger.debug(f"Kills/Assists/Knocks misinterpreted: {parts}")
             return -1, -1, -1
 
     @staticmethod
@@ -117,11 +171,9 @@ class ApexOCREngine:
         for time_text in text_list:
             try:
                 if len(time_text) > 4:
-                    time_text = (
-                        time_text[:-4] + ":" + time_text[-4:-2] + ":" + time_text[-2:]
-                    )
+                    time_text = f"{time_text[:-4]}:{time_text[-4:-2]}:{time_text[-2:]}"
                 elif len(time_text) > 2:
-                    time_text = time_text[:-2] + ":" + time_text[-2:]
+                    time_text = f"{time_text[:-2]}:{time_text[-2:]}"
                 time_survived_list.append(time_text)
             except:
                 time_survived_list.append("0")
@@ -176,30 +228,27 @@ class ApexOCREngine:
 
         return None
 
-    def initialize_database_engine(self):
-        if DATABASE:
-            with open(DATABASE_YML_FILE) as db_file:
-                db_config = yaml.load(db_file, Loader=yaml.FullLoader)
+    def get_database_session(self) -> ApexDatabaseApi:
+        with open(DATABASE_YML_FILE) as db_file:
+            db_config = yaml.load(db_file, Loader=yaml.FullLoader)
 
-            dialect = db_config["dialect"]
-            username = db_config["username"]
-            password = db_config["password"]
-            hostname = db_config["hostname"]
-            port = db_config["port"]
-            database_name = db_config["database_name"]
+        dialect = db_config["dialect"]
+        username = db_config["username"]
+        password = db_config["password"]
+        hostname = db_config["hostname"]
+        port = db_config["port"]
+        database_name = db_config["database_name"]
 
-            db_conn_str = (
-                f"{dialect}://{username}:{password}@{hostname}:{port}/{database_name}"
-            )
+        db_conn_str = (
+            f"{dialect}://{username}:{password}@{hostname}:{port}/{database_name}"
+        )
 
-            self.db_conn = ApexDatabaseApi(db_conn_str)
-        else:
-            self.db_conn = None
+        return ApexDatabaseApi(db_conn_str)
 
     def text_from_image_paddleocr(
         self, image: np.ndarray, blur_amount: int, text_detection: bool = False
     ) -> str:
-        img = self.preprocess_image(image, blur_amount)
+        img = preprocess_image(image, blur_amount)
         texts = self.paddle_ocr.ocr(img, det=text_detection, cls=False)[0]
 
         # Concatenate all the recognized strings together
@@ -214,21 +263,26 @@ class ApexOCREngine:
         return text
 
     def process_squad_summary_page(
-        self, image: Union[Path, np.ndarray, None] = None, debug: bool = False
+        self, image: Union[Path, None] = None, debug: bool = False
     ) -> dict:
+        results_dict = defaultdict(None)
+
         if image:
-            if isinstance(image, np.ndarray):
-                dup_images = [Image.fromarray(image)] * self.num_images
-            elif isinstance(image, Path):
-                dup_images = [Image.open(image)] * self.num_images
+            pil_image = Image.open(image)
+            dup_images = [pil_image] * self.num_images
+
+            # Screenshots do not have EXIF data so must resort to file OS stats
+            results_dict["Datetime"] = datetime.fromtimestamp(
+                image.stat().st_ctime, tz=timezone.utc
+            )
+
         else:
             # Take duplicate images immediately to get the most common interpretation
             dup_images = [
                 ImageGrab.grab(bbox=TOP_SCREEN) for _ in range(self.num_images)
             ]
+            results_dict["Datetime"] = datetime.utcnow()
 
-        results_dict = defaultdict(None)
-        results_dict["Datetime"] = datetime.utcnow()
         matches = defaultdict(list)
 
         if debug:
@@ -240,8 +294,7 @@ class ApexOCREngine:
             # Magic: Important when running in docker with joblib
             dup_images[0].load()
 
-        log_and_beep("Processing squad summary...", 1500)
-        from joblib import parallel_backend, Parallel, delayed
+        logger.info("Processing squad summary...")
 
         with parallel_backend(
             "threading", n_jobs=len(self.blurs)
@@ -266,10 +319,7 @@ class ApexOCREngine:
             else:
                 results_dict[k] = "n/a"
 
-        log_and_beep(
-            f"Finished processing images",
-            1000,
-        )
+        logger.info("Finished processing images")
 
         return results_dict
 
@@ -301,7 +351,7 @@ class ApexOCREngine:
 
         # Get squad placement
         matches["Place"].extend(
-            replace_nondigits(SQUAD_SUMMARY_MAP["Place"].findall(place_text))
+            utils.replace_nondigits(re.findall("#([0-9]{1,2})", place_text))
         )
 
         squad_kills = 0
@@ -309,51 +359,68 @@ class ApexOCREngine:
         # Get individual player stat
         for player, player_dict in players.items():
             # Get player username
-            matches[player.upper()].append(
-                self.text_from_image_paddleocr(
-                    player_dict["player"],
-                    blur_amount,
-                )
+            player_name_text = self.text_from_image_paddleocr(
+                player_dict["player"],
+                blur_amount,
             )
+            matches[player].append(player_name_text)
 
             # Get player kills/assists/knockdowns
             kakn_text = self.text_from_image_paddleocr(player_dict["kakn"], blur_amount)
             kills, assists, knocks = self.process_kakn(kakn_text)
             squad_kills += kills
-            matches[player.upper() + " Kills"].append(kills)
-            matches[player.upper() + " Assists"].append(assists)
-            matches[player.upper() + " Knocks"].append(knocks)
+
+            matches[f"{player} Kills"].append(kills)
+            matches[f"{player} Assists"].append(assists)
+            matches[f"{player} Knocks"].append(knocks)
 
             # Get player damage
-            matches[player.upper() + " Damage"].append(
-                self.text_from_image_paddleocr(player_dict["damage"], blur_amount)
+            damage_text = self.text_from_image_paddleocr(
+                player_dict["damage"], blur_amount
             )
+            try:
+                damage = int(damage_text)
+            except ValueError:
+                logger.debug(f"Damage misinterpreted: {damage_text}")
+                damage = -1
+            matches[f"{player} Damage"].append(damage)
 
             # Get player survival time
+            # TODO: Add validation to survival time text
             time_text = self.text_from_image_paddleocr(
                 player_dict["survival_time"], blur_amount
             )
             if len(time_text) >= 3 and ":" not in time_text:
                 time_text = ":".join([time_text[:-2], time_text[-2:]])
-            matches[player.upper() + " Time Survived"].append(time_text)
+            matches[f"{player} Time Survived"].append(time_text)
 
             # Get player revives
             revive_text = self.text_from_image_paddleocr(
                 player_dict["revives"], blur_amount
             )
-            matches[player.upper() + " Revives"].append(revive_text)
+            try:
+                revives = int(revive_text)
+            except ValueError:
+                logger.debug(f"Revives misinterpreted: {revive_text}")
+                revives = -1
+            matches[f"{player} Revives"].append(revives)
 
             # Get player respawns
             respawn_text = self.text_from_image_paddleocr(
                 player_dict["respawns"],
                 blur_amount,
             )
-            matches[player.upper() + " Respawns"].append(respawn_text)
+            try:
+                respawns = int(respawn_text)
+            except ValueError:
+                logger.debug(f"Respawns misinterpreted: {respawn_text}")
+                respawns = -1
+            matches[f"{player} Respawns"].append(respawns)
 
         # Get squad kills
         matches["Squad Kills"].append(squad_kills)
 
-    def process_screenshot(self, image: Union[Path, np.ndarray, None] = None) -> None:
+    def process_screenshot(self, image: Union[Path, None] = None) -> None:
         summary_type = self.classify_summary_page(image)
         results_dict = {}
 
@@ -362,16 +429,22 @@ class ApexOCREngine:
 
         elif summary_type == SummaryType.SQUAD:
             results_dict = self.process_squad_summary_page(image)
-            output_path = SQUAD_STATS_FILE
-            headers = SQUAD_SUMMARY_HEADERS
 
         if results_dict:
+            # Compute hash of results
             d = ApexOCREngine.reformat_results(results_dict)
-            results_dict["Hash"] = hash_dict(d)
-            display_results(results_dict)
+            results_dict["Hash"] = utils.hash_dict(d)
 
-            if write_to_file(output_path, headers, results_dict):
-                logger.info(f"Finished writing results to {output_path.name}")
+            # Print results to console
+            utils.display_results(results_dict)
 
-            if DATABASE and self.db_conn is not None:
-                self.db_conn.push_results(results_dict)
+            if ApexOCREngine.is_valid_results(results_dict):
+                # Currently only supporting squad stats
+                # Will need to change this if there is another output filepath or format
+                if utils.write_to_file(
+                    SQUAD_STATS_FILE, self.squad_summary_headers, results_dict
+                ):
+                    logger.info(f"Finished writing results to {SQUAD_STATS_FILE.name}")
+
+                if DATABASE and self.db_conn is not None:
+                    self.db_conn.push_results(results_dict)

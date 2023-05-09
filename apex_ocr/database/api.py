@@ -1,7 +1,7 @@
 import logging
 
 from sqlalchemy import create_engine
-from sqlalchemy.exc import IntegrityError
+from sqlalchemy.exc import IntegrityError, DataError
 from sqlalchemy.orm.session import sessionmaker
 
 from apex_ocr.utils import time_survived_to_seconds
@@ -35,9 +35,7 @@ class ApexDatabaseApi:
         self.session.commit()
 
     def push_results(self, results: dict) -> None:
-        # TODO: Check for duplicate result in the database
         # TODO: Handle different match types
-
         # Commit match result
         match_result = MatchResult(
             datetime=results["Datetime"],
@@ -45,6 +43,7 @@ class ApexDatabaseApi:
             place=results["Place"],
             hash=results["Hash"],
         )
+
         try:
             self.add(match_result)
         except IntegrityError:
@@ -52,30 +51,47 @@ class ApexDatabaseApi:
             self.session.rollback()
             return
 
+        # Batch add player match result objects
+        add_list = []
+
         for p_num in ["P1", "P2", "P3"]:
             # Commit players if not already in database
             player_name = results[p_num]
             player = self.session.query(Player).filter_by(name=player_name).first()
 
             if player is None:
+                # TODO: Add clan tags to database
                 player = Player(name=player_name)
                 self.add(player)
 
-            # Commit match player results
-            time_survived = time_survived_to_seconds(
-                results[p_num + " " + "Time Survived"]
-            )
+            try:
+                # Convert string time format to seconds
+                time_survived = time_survived_to_seconds(
+                    results[f"{p_num} Time Survived"]
+                )
+            except ValueError as e:
+                logger.error(e)
+                break
 
+            # Create match player result object to add to database
             player_match_result = PlayerMatchResult(
                 player_id=player.id,
                 match_id=match_result.id,
-                kills=results[p_num + " " + "Kills"],
-                assists=results[p_num + " " + "Assists"],
-                knockdowns=results[p_num + " " + "Knocks"],
-                damage=results[p_num + " " + "Damage"],
+                kills=results[f"{p_num} Kills"],
+                assists=results[f"{p_num} Assists"],
+                knockdowns=results[f"{p_num} Knocks"],
+                damage=results[f"{p_num} Damage"],
                 survival_time=time_survived,
-                revives=results[p_num + " " + "Revives"],
-                respawns=results[p_num + " " + "Respawns"],
+                revives=results[f"{p_num} Revives"],
+                respawns=results[f"{p_num} Respawns"],
             )
 
-            self.add(player_match_result)
+            add_list.append(player_match_result)
+        else:
+            # Add match player results if loop did not break
+            try:
+                self.add_all(add_list)
+            except DataError as e:
+                logger.error(e)
+                self.session.rollback()
+                return

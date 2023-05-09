@@ -65,3 +65,13 @@ def deskew(image):
 def match_template(image, template):
     # template matching
     return cv2.matchTemplate(image, template, cv2.TM_CCOEFF_NORMED)
+
+
+def preprocess_image(image: np.ndarray, blur_amount: int = 0) -> np.ndarray:
+    grayscale_img = grayscale(image)
+    threshold_img = thresholding(grayscale_img)
+
+    if blur_amount > 0:
+        return cv2.GaussianBlur(threshold_img, (blur_amount, blur_amount), 0)
+    else:
+        return threshold_img
