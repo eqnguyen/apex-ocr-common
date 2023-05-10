@@ -56,20 +56,20 @@ class WinLoss(enum.Enum):
     LOSS = enum.auto()
 
 
-class Player(Base):
-    __tablename__ = "player"
-
-    id = Column(Integer, primary_key=True)
-    clan_id = Column(Integer, ForeignKey("clan.id"))
-    name = Column(String, nullable=False)
-
-
 class Clan(Base):
     __tablename__ = "clan"
 
     id = Column(Integer, primary_key=True)
     tag = Column(String, nullable=False)
     name = Column(String)
+
+
+class Player(Base):
+    __tablename__ = "player"
+
+    id = Column(Integer, primary_key=True)
+    clan_id = Column(Integer, ForeignKey("clan.id", ondelete="SET NULL"))
+    name = Column(String, nullable=False)
 
 
 class PlayerMatchResult(Base):
