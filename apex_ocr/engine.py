@@ -140,7 +140,7 @@ class ApexOCREngine:
         p2_clan_tag = results_copy.pop("P2 Clan")
         p3_clan_tag = results_copy.pop("P3 Clan")
         if "" in results_copy.values():
-            logger.error("Empty string in results_copy!")
+            logger.error("Empty string in results!")
             return False
 
         # Check for invalid kills / assists / knockdowns
