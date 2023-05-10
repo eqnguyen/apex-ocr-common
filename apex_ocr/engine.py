@@ -37,6 +37,7 @@ class ApexOCREngine:
         "Place",
         "Squad Kills",
         "P1",
+        "P1 Clan",
         "P1 Kills",
         "P1 Assists",
         "P1 Knocks",
@@ -45,6 +46,7 @@ class ApexOCREngine:
         "P1 Revives",
         "P1 Respawns",
         "P2",
+        "P2 Clan",
         "P2 Kills",
         "P2 Assists",
         "P2 Knocks",
@@ -53,6 +55,7 @@ class ApexOCREngine:
         "P2 Revives",
         "P2 Respawns",
         "P3",
+        "P3 Clan",
         "P3 Kills",
         "P3 Assists",
         "P3 Knocks",
@@ -141,6 +144,24 @@ class ApexOCREngine:
             return False
 
         return True
+
+    @staticmethod
+    def process_player_name(text: str) -> Tuple[str, str]:
+        clan_tag = ""
+        player_name = ""
+
+        pattern = r"^\[(\w{3,4})\](.*)"
+
+        # Search for pattern in text
+        match = re.search(pattern, text)
+
+        if match:
+            clan_tag = match.group(1)
+            player_name = match.group(2)
+        else:
+            player_name = text
+
+        return clan_tag, player_name
 
     @staticmethod
     def process_kakn(text: str) -> Tuple[int, int, int]:
@@ -364,7 +385,9 @@ class ApexOCREngine:
                 player_dict["player"],
                 blur_amount,
             )
-            matches[player].append(player_name_text)
+            clan_tag, player_name = self.process_player_name(player_name_text)
+            matches[player].append(player_name)
+            matches[f"{player} Clan"].append(clan_tag)
 
             # Get player kills/assists/knockdowns
             kakn_text = self.text_from_image_paddleocr(player_dict["kakn"], blur_amount)
