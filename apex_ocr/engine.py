@@ -152,13 +152,15 @@ class ApexOCREngine:
 
     @staticmethod
     def process_player_name(text: str) -> Tuple[str, str]:
+        # Initialize variables
         clan_tag = ""
         player_name = ""
 
-        pattern = r"^\[(\w{3,4})\](.*)"
+        # Strip symbols from the end of text
+        text = re.sub(r"[^\w]+$", "", text)
 
         # Search for pattern in text
-        match = re.search(pattern, text)
+        match = re.search(r"^\[(\w{3,4})\](.*)", text)
 
         if match:
             clan_tag = match.group(1)
