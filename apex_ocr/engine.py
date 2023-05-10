@@ -123,23 +123,28 @@ class ApexOCREngine:
 
     @staticmethod
     def is_valid_results(results: dict) -> bool:
+        results_copy = results.copy()
+
         # Check for empty results dictionary
-        if not results:
+        if not results_copy:
             logger.error("Empty results!")
             return False
 
         # Check for "n/a" in squad placement
-        if "n/a" in results.values():
+        if "n/a" in results_copy.values():
             logger.error("N/A found in results!")
             return False
 
-        # Check for any fields with empty strings
-        if "" in results.values():
-            logger.error("Empty string in results!")
+        # Check for any fields with empty strings except for clan tag
+        p1_clan_tag = results_copy.pop("P1 Clan")
+        p2_clan_tag = results_copy.pop("P2 Clan")
+        p3_clan_tag = results_copy.pop("P3 Clan")
+        if "" in results_copy.values():
+            logger.error("Empty string in results_copy!")
             return False
 
         # Check for invalid kills / assists / knockdowns
-        if -1 in results.values():
+        if -1 in results_copy.values():
             logger.error("Inalid Kills/Assists/Knocks in results!")
             return False
 
@@ -456,13 +461,13 @@ class ApexOCREngine:
 
         if results_dict:
             # Compute hash of results
-            d = ApexOCREngine.reformat_results(results_dict)
+            d = self.reformat_results(results_dict)
             results_dict["Hash"] = utils.hash_dict(d)
 
             # Print results to console
             utils.display_results(results_dict)
 
-            if ApexOCREngine.is_valid_results(results_dict):
+            if self.is_valid_results(results_dict):
                 # Currently only supporting squad stats
                 # Will need to change this if there is another output filepath or format
                 if utils.write_to_file(
