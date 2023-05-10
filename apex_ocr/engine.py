@@ -21,7 +21,9 @@ from apex_ocr.config import (
 )
 from apex_ocr.database.api import ApexDatabaseApi
 from apex_ocr.preprocessing import preprocess_image
-from apex_ocr.roi import SUMMARY_ROI, TOP_SCREEN, TOTAL_KILLS_ROI, get_rois
+from apex_ocr.roi import get_rois
+# Important to mutate roi globals
+from apex_ocr import roi
 
 logger = logging.getLogger(__name__)
 
@@ -189,10 +191,10 @@ class ApexOCREngine:
             elif isinstance(input, Path):
                 image = Image.open(str(input))
         else:
-            image = ImageGrab.grab(bbox=TOP_SCREEN)
+            image = ImageGrab.grab(bbox=roi.TOP_SCREEN)
 
-        summary_img = np.array(image.crop(SUMMARY_ROI))
-        total_kills_img = np.array(image.crop(TOTAL_KILLS_ROI))
+        summary_img = np.array(image.crop(roi.SUMMARY_ROI))
+        total_kills_img = np.array(image.crop(roi.TOTAL_KILLS_ROI))
 
         summary_text = self.text_from_image_paddleocr(
             summary_img, blur_amount=3, text_detection=True
@@ -279,7 +281,7 @@ class ApexOCREngine:
         else:
             # Take duplicate images immediately to get the most common interpretation
             dup_images = [
-                ImageGrab.grab(bbox=TOP_SCREEN) for _ in range(self.num_images)
+                ImageGrab.grab(bbox=roi.TOP_SCREEN) for _ in range(self.num_images)
             ]
             results_dict["Datetime"] = datetime.utcnow()
 

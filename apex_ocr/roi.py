@@ -16,26 +16,11 @@ logger = logging.getLogger(__name__)
 
 PRIMARY_MONITOR = get_primary_monitor()
 
-SUMMARY_ROI = (
-    PRIMARY_MONITOR.width // 3,
-    0,
-    PRIMARY_MONITOR.width * 2 // 3,
-    PRIMARY_MONITOR.height // 10,
-)
+SUMMARY_ROI = ()
 
-TOTAL_KILLS_ROI = (
-    PRIMARY_MONITOR.width * 5 // 6,
-    PRIMARY_MONITOR.height // 10,
-    PRIMARY_MONITOR.width,
-    PRIMARY_MONITOR.height * 2 // 10,
-)
+TOTAL_KILLS_ROI = ()
 
-TOP_SCREEN = (
-    PRIMARY_MONITOR.x,
-    PRIMARY_MONITOR.y,
-    PRIMARY_MONITOR.x + PRIMARY_MONITOR.width,
-    PRIMARY_MONITOR.y + PRIMARY_MONITOR.height,
-)
+TOP_SCREEN = ()
 
 ROI_DICT = {}
 SQUAD_PLACE_ROI = ()
@@ -69,8 +54,10 @@ def scale_rois(resolution: Union[Tuple[int, int], None] = None):
     # resolution means we are analyzing screenshot(s)
     if resolution:
         width, height = resolution
+        x, y = 0, 0
     else:
         width, height = PRIMARY_MONITOR.width, PRIMARY_MONITOR.height
+        x, y = PRIMARY_MONITOR.x, PRIMARY_MONITOR.y
 
     for key, val in ROI_VARS.items():
         if "WIDTH" in key or "COL" in key:
@@ -82,11 +69,27 @@ def scale_rois(resolution: Union[Tuple[int, int], None] = None):
         else:
             logger.error(f"Unknown var: {key}")
 
-    calculate_rois()
+    calculate_rois(width, height, x, y)
 
 
-def calculate_rois():
-    global SQUAD_PLACE_ROI, TOTAL_KILLS_ROI, ROI_DICT
+def calculate_rois(width: int, height: int, x: int, y: int):
+    global SQUAD_PLACE_ROI, TOTAL_KILLS_ROI, ROI_DICT, SUMMARY_ROI, TOP_SCREEN
+
+    logger.warning(SUMMARY_ROI)
+    SUMMARY_ROI = (
+        x + width // 3,
+        y,
+        x + width * 2 // 3,
+        y + height // 10,
+    )
+    logger.warning(SUMMARY_ROI)
+
+    TOP_SCREEN = (
+        x,
+        y,
+        x + width,
+        y + height,
+    )
 
     # Squad placement
     SQUAD_PLACE_ROI = (
