@@ -77,10 +77,10 @@ def calculate_rois(width: int, height: int, x: int, y: int):
 
     logger.warning(SUMMARY_ROI)
     SUMMARY_ROI = (
-        x + width // 3,
-        y,
-        x + width * 2 // 3,
-        y + height // 10,
+        width // 3,
+        0,
+        width * 2 // 3,
+        height // 10,
     )
     logger.warning(SUMMARY_ROI)
 
@@ -242,7 +242,7 @@ def get_rois(img: Image, debug: bool = False) -> Tuple[np.ndarray, dict]:
             player_images[stat[0]] = np.array(img.crop(img_region))
             if debug:
                 draw.rectangle(img_region, width=3)
-                draw.text(img_region[:1], stat)
+                draw.text(img_region[:2], stat)
         players[player[0]] = player_images
 
     if debug:
