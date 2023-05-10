@@ -479,3 +479,8 @@ class ApexOCREngine:
 
                 if DATABASE and self.db_conn is not None:
                     self.db_conn.push_results(results_dict)
+            else:
+                if isinstance(image, Path):
+                    logger.error(f"Invalid results for {image}: {results_dict}")
+                else:
+                    logger.error(f"Invalid results for screenshot: {results_dict}")
