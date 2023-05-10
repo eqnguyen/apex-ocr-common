@@ -21,7 +21,7 @@ from apex_ocr.config import (
 )
 from apex_ocr.database.api import ApexDatabaseApi
 from apex_ocr.preprocessing import preprocess_image
-from apex_ocr.roi import SUMMARY_ROI, TOP_SCREEN, TOTAL_KILLS_ROI, get_rois
+from apex_ocr.roi import SUMMARY_ROI, TOP_SCREEN, TOTAL_KILLS_ROI, get_rois, scale_rois
 
 logger = logging.getLogger(__name__)
 
@@ -422,6 +422,8 @@ class ApexOCREngine:
         matches["Squad Kills"].append(squad_kills)
 
     def process_screenshot(self, image: Union[Path, None] = None) -> None:
+        scale_rois(Image.open(image).size)
+
         summary_type = self.classify_summary_page(image)
         results_dict = {}
 
