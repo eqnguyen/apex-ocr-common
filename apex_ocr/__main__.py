@@ -72,12 +72,23 @@ def main(filepath: str):
 
 if __name__ == "__main__":
     # Configure logger
+    file_handler = logging.FileHandler("apex_ocr.log")
+    file_handler.setLevel(logging.DEBUG)
+    file_handler.setFormatter(
+        logging.Formatter(
+            "%(asctime)s | %(levelname)s | %(name)s | %(message)s",
+            datefmt="%Y-%m-%d %H:%M:%S",
+        )
+    )
     logging.basicConfig(
         level=logging.INFO,
         format=" %(name)s | %(message)s",
         datefmt="%Y-%m-%d %H:%M:%S",
         force=True,
-        handlers=[RichHandler(omit_repeated_times=False, rich_tracebacks=True)],
+        handlers=[
+            file_handler,
+            RichHandler(omit_repeated_times=False, rich_tracebacks=True),
+        ],
     )
 
     try:
