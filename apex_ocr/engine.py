@@ -181,13 +181,14 @@ class ApexOCREngine:
         return time_survived_list
 
     def classify_summary_page(
-        self, input: Union[Path, np.ndarray, None] = None, debug: bool = False
+        self, input: Union[Path, None] = None, debug: bool = False
     ) -> Union[SummaryType, None]:
         if input:
-            if isinstance(input, np.ndarray):
-                image = Image.fromarray(input)
-            elif isinstance(input, Path):
+            if isinstance(input, Path):
                 image = Image.open(str(input))
+            else:
+                logger.error(f"Unsupported input type: {type(input)}")
+                return None
         else:
             image = ImageGrab.grab(bbox=TOP_SCREEN)
 
