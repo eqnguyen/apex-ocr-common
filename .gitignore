@@ -164,6 +164,7 @@ cython_debug/
 
 # Saved data
 data/
+server/uploads/
 *.csv
 
 # Database configuration
