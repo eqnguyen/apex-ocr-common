@@ -16,26 +16,11 @@ logger = logging.getLogger(__name__)
 
 PRIMARY_MONITOR = get_primary_monitor()
 
-SUMMARY_ROI = (
-    PRIMARY_MONITOR.width // 3,
-    0,
-    PRIMARY_MONITOR.width * 2 // 3,
-    PRIMARY_MONITOR.height // 10,
-)
+SUMMARY_ROI = ()
 
-TOTAL_KILLS_ROI = (
-    PRIMARY_MONITOR.width * 5 // 6,
-    PRIMARY_MONITOR.height // 10,
-    PRIMARY_MONITOR.width,
-    PRIMARY_MONITOR.height * 2 // 10,
-)
+TOTAL_KILLS_ROI = ()
 
-TOP_SCREEN = (
-    PRIMARY_MONITOR.x,
-    PRIMARY_MONITOR.y,
-    PRIMARY_MONITOR.x + PRIMARY_MONITOR.width,
-    PRIMARY_MONITOR.y + PRIMARY_MONITOR.height,
-)
+TOP_SCREEN = ()
 
 ROI_DICT = {}
 SQUAD_PLACE_ROI = ()
@@ -69,8 +54,10 @@ def scale_rois(resolution: Union[Tuple[int, int], None] = None):
     # resolution means we are analyzing screenshot(s)
     if resolution:
         width, height = resolution
+        x, y = 0, 0
     else:
         width, height = PRIMARY_MONITOR.width, PRIMARY_MONITOR.height
+        x, y = PRIMARY_MONITOR.x, PRIMARY_MONITOR.y
 
     for key, val in ROI_VARS.items():
         if "WIDTH" in key or "COL" in key:
@@ -82,11 +69,27 @@ def scale_rois(resolution: Union[Tuple[int, int], None] = None):
         else:
             logger.error(f"Unknown var: {key}")
 
-    calculate_rois()
+    calculate_rois(width, height, x, y)
 
 
-def calculate_rois():
-    global SQUAD_PLACE_ROI, TOTAL_KILLS_ROI, ROI_DICT
+def calculate_rois(width: int, height: int, x: int, y: int):
+    global SQUAD_PLACE_ROI, TOTAL_KILLS_ROI, ROI_DICT, SUMMARY_ROI, TOP_SCREEN
+
+    logger.warning(SUMMARY_ROI)
+    SUMMARY_ROI = (
+        width // 3,
+        0,
+        width * 2 // 3,
+        height // 10,
+    )
+    logger.warning(SUMMARY_ROI)
+
+    TOP_SCREEN = (
+        x,
+        y,
+        x + width,
+        y + height,
+    )
 
     # Squad placement
     SQUAD_PLACE_ROI = (
@@ -227,10 +230,6 @@ def get_rois(img: Image, debug: bool = False) -> Tuple[np.ndarray, dict]:
         draw = ImageDraw.Draw(img)
         draw.rectangle((0, 0, 50, 50), width=3)
         draw.rectangle(SQUAD_PLACE_ROI, width=3)
-        img.save(
-            DATA_DIRECTORY
-            / f"rois_img_{datetime.utcnow().strftime('%Y-%m-%d_%H-%M-%S')}.png"
-        )
 
     squad_place = np.array(img.crop(SQUAD_PLACE_ROI))
 
@@ -241,6 +240,14 @@ def get_rois(img: Image, debug: bool = False) -> Tuple[np.ndarray, dict]:
         for stat in player[1].items():
             img_region = stat[1]
             player_images[stat[0]] = np.array(img.crop(img_region))
+            if debug:
+                draw.rectangle(img_region, width=3)
+                draw.text(img_region[:2], stat)
         players[player[0]] = player_images
+
+    if debug:
+        image_path = DATA_DIRECTORY / f"rois_img_{datetime.utcnow().strftime('%Y-%m-%d_%H-%M-%S')}.png"
+        logger.debug(f"Debug roi image saved: {image_path}")
+        img.save(image_path)
 
     return squad_place, players

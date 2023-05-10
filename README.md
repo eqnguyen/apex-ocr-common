@@ -53,6 +53,10 @@ PaddlePaddle works well on 1 GPUs.
 PaddlePaddle is installed successfully! Let's start deep learning with PaddlePaddle now.
 ```
 
+## Linux Compatability
+
+A dockerfile has been provided that should set up the required environment. https://support.system76.com/articles/cuda/ might also be useful, since the docker will require a gpu to run.
+
 ## Database
 
 [database]: #database
