@@ -73,7 +73,7 @@ class ApexDatabaseApi:
 
             if player is None:
                 if clan:
-                    player = Player(name=player_name, clan=clan.id)
+                    player = Player(name=player_name, clan_id=clan.id)
                 else:
                     player = Player(name=player_name)
 
