@@ -204,22 +204,17 @@ class ApexOCREngine:
         )
 
         if debug:
+            from PIL import ImageDraw
+            draw = ImageDraw.Draw(image)
+
+            draw.rectangle(roi.SUMMARY_ROI, width=3)
+            draw.rectangle(roi.TOTAL_KILLS_ROI, width=3)
+
+            draw.text((5, 5), f"{summary_text=}\n{kills_text=}", stroke_width=3)
             image.save(
                 DATA_DIRECTORY
                 / f"raw_{datetime.utcnow().strftime('%Y-%m-%d_%H-%M-%S')}.png"
             )
-
-            Image.fromarray(total_kills_img).save(
-                DATA_DIRECTORY
-                / f"preprocessed_{datetime.utcnow().strftime('%Y-%m-%d_%H-%M-%S')}.png"
-            )
-
-            with open(
-                DATA_DIRECTORY
-                / f"text_{datetime.utcnow().strftime('%Y-%m-%d_%H-%M-%S')}.txt",
-                "w+",
-            ) as f:
-                f.write(f"{summary_text}\n{kills_text}")
 
         if "summary" in summary_text:
             # TODO: Classify different categories of squad summary
@@ -305,7 +300,7 @@ class ApexOCREngine:
             # OCR for all the images captured, then assign interpretation to the associated stat
             Parallel()(
                 delayed(self.process_squad_summary_page_helper)(
-                    img, blur_amount, matches
+                    img, blur_amount, matches, debug
                 )
                 for img, blur_amount in zip(dup_images, self.blurs)
             )
@@ -336,7 +331,7 @@ class ApexOCREngine:
             logger.error(f"img is None")
             exit(1)
         # Get regions of interest
-        squad_place, players = get_rois(img)
+        squad_place, players = get_rois(img, debug)
 
         if debug:
             img.save(
@@ -422,15 +417,15 @@ class ApexOCREngine:
         # Get squad kills
         matches["Squad Kills"].append(squad_kills)
 
-    def process_screenshot(self, image: Union[Path, None] = None) -> None:
-        summary_type = self.classify_summary_page(image)
+    def process_screenshot(self, image: Union[Path, None] = None, debug: bool = False) -> None:
+        summary_type = self.classify_summary_page(image, debug=debug)
         results_dict = {}
 
         if summary_type == SummaryType.PERSONAL:
             pass
 
         elif summary_type == SummaryType.SQUAD:
-            results_dict = self.process_squad_summary_page(image)
+            results_dict = self.process_squad_summary_page(image, debug)
 
         if results_dict:
             # Compute hash of results

@@ -230,10 +230,6 @@ def get_rois(img: Image, debug: bool = False) -> Tuple[np.ndarray, dict]:
         draw = ImageDraw.Draw(img)
         draw.rectangle((0, 0, 50, 50), width=3)
         draw.rectangle(SQUAD_PLACE_ROI, width=3)
-        img.save(
-            DATA_DIRECTORY
-            / f"rois_img_{datetime.utcnow().strftime('%Y-%m-%d_%H-%M-%S')}.png"
-        )
 
     squad_place = np.array(img.crop(SQUAD_PLACE_ROI))
 
@@ -244,6 +240,14 @@ def get_rois(img: Image, debug: bool = False) -> Tuple[np.ndarray, dict]:
         for stat in player[1].items():
             img_region = stat[1]
             player_images[stat[0]] = np.array(img.crop(img_region))
+            if debug:
+                draw.rectangle(img_region, width=3)
+                draw.text(img_region[:1], stat)
         players[player[0]] = player_images
+
+    if debug:
+        image_path = DATA_DIRECTORY / f"rois_img_{datetime.utcnow().strftime('%Y-%m-%d_%H-%M-%S')}.png"
+        logger.debug(f"Debug roi image saved: {image_path}")
+        img.save(image_path)
 
     return squad_place, players

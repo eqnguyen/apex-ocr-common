@@ -25,7 +25,8 @@ logger = logging.getLogger(__name__)
 
 @click.command()
 @click.argument("filepath", required=False, type=click.Path(exists=True))
-def main(filepath: str):
+@click.option("-d", "--debug", is_flag=True, show_default=True, default=False)
+def main(filepath: str, debug:bool):
     ocr_engine = ApexOCREngine()
 
     if filepath:
@@ -57,7 +58,7 @@ def main(filepath: str):
             scale_rois(Image.open(file_list[0]).size)
             for screenshot_path in file_list:
                 logger.info(f"Performing OCR on {screenshot_path.name}...")
-                ocr_engine.process_screenshot(screenshot_path)
+                ocr_engine.process_screenshot(screenshot_path, debug)
 
                 pb.update(task1, advance=1)
 
@@ -66,7 +67,7 @@ def main(filepath: str):
         logger.info("Watching screen...")
 
         while True:
-            ocr_engine.process_screenshot()
+            ocr_engine.process_screenshot(debug=debug)
             time.sleep(3)
 
 
