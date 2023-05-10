@@ -421,7 +421,7 @@ class ApexOCREngine:
         # Get squad kills
         matches["Squad Kills"].append(squad_kills)
 
-    def process_screenshot(self, image: Union[Path, None] = None) -> None:
+    def process_screenshot(self, image: Union[Path, None] = None) -> dict:
         scale_rois(Image.open(image).size)
 
         summary_type = self.classify_summary_page(image)
@@ -451,3 +451,5 @@ class ApexOCREngine:
 
                 if DATABASE and self.db_conn is not None:
                     self.db_conn.push_results(results_dict)
+
+        return results_dict
