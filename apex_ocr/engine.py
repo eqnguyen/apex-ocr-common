@@ -22,6 +22,7 @@ from apex_ocr.config import (
 from apex_ocr.database.api import ApexDatabaseApi
 from apex_ocr.preprocessing import preprocess_image
 from apex_ocr.roi import get_rois
+
 # Important to mutate roi globals
 from apex_ocr import roi
 
@@ -205,6 +206,7 @@ class ApexOCREngine:
 
         if debug:
             from PIL import ImageDraw
+
             draw = ImageDraw.Draw(image)
 
             draw.rectangle(roi.SUMMARY_ROI, width=3)
@@ -417,7 +419,9 @@ class ApexOCREngine:
         # Get squad kills
         matches["Squad Kills"].append(squad_kills)
 
-    def process_screenshot(self, image: Union[Path, None] = None, debug: bool = False) -> None:
+    def process_screenshot(
+        self, image: Union[Path, None] = None, debug: bool = False
+    ) -> None:
         summary_type = self.classify_summary_page(image, debug=debug)
         results_dict = {}
 

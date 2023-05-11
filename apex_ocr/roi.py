@@ -246,7 +246,10 @@ def get_rois(img: Image, debug: bool = False) -> Tuple[np.ndarray, dict]:
         players[player[0]] = player_images
 
     if debug:
-        image_path = DATA_DIRECTORY / f"rois_img_{datetime.utcnow().strftime('%Y-%m-%d_%H-%M-%S')}.png"
+        image_path = (
+            DATA_DIRECTORY
+            / f"rois_img_{datetime.utcnow().strftime('%Y-%m-%d_%H-%M-%S')}.png"
+        )
         logger.debug(f"Debug roi image saved: {image_path}")
         img.save(image_path)
 
