@@ -7,6 +7,10 @@ logger = logging.getLogger(__name__)
 # Valid image extensions
 IMAGE_EXTENSIONS = [".jpg", ".jpeg", ".png"]
 
+# Path to log directory
+LOG_DIRECTORY = Path(__file__).parent.parent / "logs"
+LOG_DIRECTORY.mkdir(parents=True, exist_ok=True)
+
 # Path to stats file
 DATA_DIRECTORY = Path(__file__).parent.parent / "data"
 DATA_DIRECTORY.mkdir(parents=True, exist_ok=True)

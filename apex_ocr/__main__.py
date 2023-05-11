@@ -1,5 +1,6 @@
 import logging
 import time
+from datetime import datetime
 from pathlib import Path
 
 import click
@@ -15,7 +16,7 @@ from rich.progress import (
     TimeRemainingColumn,
 )
 
-from apex_ocr.config import IMAGE_EXTENSIONS
+from apex_ocr.config import IMAGE_EXTENSIONS, LOG_DIRECTORY
 from apex_ocr.engine import ApexOCREngine
 from apex_ocr.roi import scale_rois
 
@@ -73,7 +74,10 @@ def main(filepath: str, debug: bool):
 
 if __name__ == "__main__":
     # Configure logger
-    file_handler = logging.FileHandler("apex_ocr.log")
+    file_handler = logging.FileHandler(
+        LOG_DIRECTORY
+        / f"apex_ocr_{datetime.utcnow().strftime('%Y-%m-%d_%H-%M-%S')}.log"
+    )
     file_handler.setLevel(logging.DEBUG)
     file_handler.setFormatter(
         logging.Formatter(
