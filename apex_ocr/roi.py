@@ -75,14 +75,12 @@ def scale_rois(resolution: Union[Tuple[int, int], None] = None):
 def calculate_rois(width: int, height: int, x: int, y: int):
     global SQUAD_PLACE_ROI, TOTAL_KILLS_ROI, ROI_DICT, SUMMARY_ROI, TOP_SCREEN
 
-    logger.warning(SUMMARY_ROI)
     SUMMARY_ROI = (
         width // 3,
         0,
         width * 2 // 3,
         height // 10,
     )
-    logger.warning(SUMMARY_ROI)
 
     TOP_SCREEN = (
         x,
