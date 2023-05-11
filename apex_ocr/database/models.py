@@ -42,22 +42,6 @@ class WinLoss(enum.Enum):
     LOSS = enum.auto()
 
 
-class Player(Base):
-    __tablename__ = "player"
-
-    id = Column(Integer, primary_key=True)
-    clan_id = Column(Integer, ForeignKey("clan.id"))
-    name = Column(String, nullable=False)
-
-    match_results = relationship(
-        "PlayerMatchResult",
-        back_populates="player",
-        cascade="all, delete",
-        passive_deletes=True,
-    )
-    clan = relationship("Clan", back_populates="players")
-
-
 class Clan(Base):
     __tablename__ = "clan"
 
@@ -69,6 +53,22 @@ class Clan(Base):
         "Player",
         back_populates="clan",
     )
+
+
+class Player(Base):
+    __tablename__ = "player"
+
+    id = Column(Integer, primary_key=True)
+    clan_id = Column(Integer, ForeignKey("clan.id", ondelete="SET NULL"))
+    name = Column(String, nullable=False)
+
+    match_results = relationship(
+        "PlayerMatchResult",
+        back_populates="player",
+        cascade="all, delete",
+        passive_deletes=True,
+    )
+    clan = relationship("Clan", back_populates="players")
 
 
 class PlayerMatchResult(Base):

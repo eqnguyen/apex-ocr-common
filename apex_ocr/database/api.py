@@ -55,14 +55,34 @@ class ApexDatabaseApi:
         add_list = []
 
         for p_num in ["P1", "P2", "P3"]:
-            # Commit players if not already in database
+            # Commit clan if not already in database
+            clan_tag = results[f"{p_num} Clan"]
+
+            if clan_tag:
+                clan = self.session.query(Clan).filter_by(tag=clan_tag).first()
+
+                if clan is None:
+                    clan = Clan(tag=clan_tag)
+                    self.add(clan)
+            else:
+                clan = None
+
+            # Commit player if not already in database
             player_name = results[p_num]
             player = self.session.query(Player).filter_by(name=player_name).first()
 
             if player is None:
-                # TODO: Add clan tags to database
-                player = Player(name=player_name)
+                if clan:
+                    player = Player(name=player_name, clan_id=clan.id)
+                else:
+                    player = Player(name=player_name)
+
                 self.add(player)
+            else:
+                if clan:
+                    # Update clan information
+                    player.clan_id = clan.id
+                    self.session.commit()
 
             try:
                 # Convert string time format to seconds

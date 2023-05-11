@@ -38,6 +38,7 @@ class ApexOCREngine:
         "Place",
         "Squad Kills",
         "P1",
+        "P1 Clan",
         "P1 Kills",
         "P1 Assists",
         "P1 Knocks",
@@ -46,6 +47,7 @@ class ApexOCREngine:
         "P1 Revives",
         "P1 Respawns",
         "P2",
+        "P2 Clan",
         "P2 Kills",
         "P2 Assists",
         "P2 Knocks",
@@ -54,6 +56,7 @@ class ApexOCREngine:
         "P2 Revives",
         "P2 Respawns",
         "P3",
+        "P3 Clan",
         "P3 Kills",
         "P3 Assists",
         "P3 Knocks",
@@ -121,27 +124,52 @@ class ApexOCREngine:
 
     @staticmethod
     def is_valid_results(results: dict) -> bool:
+        results_copy = results.copy()
+
         # Check for empty results dictionary
-        if not results:
+        if not results_copy:
             logger.error("Empty results!")
             return False
 
         # Check for "n/a" in squad placement
-        if "n/a" in results.values():
+        if "n/a" in results_copy.values():
             logger.error("N/A found in results!")
             return False
 
-        # Check for any fields with empty strings
-        if "" in results.values():
+        # Check for any fields with empty strings except for clan tag
+        p1_clan_tag = results_copy.pop("P1 Clan")
+        p2_clan_tag = results_copy.pop("P2 Clan")
+        p3_clan_tag = results_copy.pop("P3 Clan")
+        if "" in results_copy.values():
             logger.error("Empty string in results!")
             return False
 
         # Check for invalid kills / assists / knockdowns
-        if -1 in results.values():
+        if -1 in results_copy.values():
             logger.error("Inalid Kills/Assists/Knocks in results!")
             return False
 
         return True
+
+    @staticmethod
+    def process_player_name(text: str) -> Tuple[str, str]:
+        # Initialize variables
+        clan_tag = ""
+        player_name = ""
+
+        # Strip symbols from the end of text
+        text = re.sub(r"[^\w]+$", "", text)
+
+        # Search for pattern in text
+        match = re.search(r"^\[(\w{3,4})\](.*)", text)
+
+        if match:
+            clan_tag = match.group(1)
+            player_name = match.group(2)
+        else:
+            player_name = text
+
+        return clan_tag, player_name
 
     @staticmethod
     def process_kakn(text: str) -> Tuple[int, int, int]:
@@ -182,13 +210,14 @@ class ApexOCREngine:
         return time_survived_list
 
     def classify_summary_page(
-        self, input: Union[Path, np.ndarray, None] = None, debug: bool = False
+        self, input: Union[Path, None] = None, debug: bool = False
     ) -> Union[SummaryType, None]:
         if input:
-            if isinstance(input, np.ndarray):
-                image = Image.fromarray(input)
-            elif isinstance(input, Path):
+            if isinstance(input, Path):
                 image = Image.open(str(input))
+            else:
+                logger.error(f"Unsupported input type: {type(input)}")
+                return None
         else:
             image = ImageGrab.grab(bbox=roi.TOP_SCREEN)
 
@@ -358,7 +387,9 @@ class ApexOCREngine:
                 player_dict["player"],
                 blur_amount,
             )
-            matches[player].append(player_name_text)
+            clan_tag, player_name = self.process_player_name(player_name_text)
+            matches[player].append(player_name)
+            matches[f"{player} Clan"].append(clan_tag)
 
             # Get player kills/assists/knockdowns
             kakn_text = self.text_from_image_paddleocr(player_dict["kakn"], blur_amount)
@@ -429,13 +460,13 @@ class ApexOCREngine:
 
         if results_dict:
             # Compute hash of results
-            d = ApexOCREngine.reformat_results(results_dict)
+            d = self.reformat_results(results_dict)
             results_dict["Hash"] = utils.hash_dict(d)
 
             # Print results to console
             utils.display_results(results_dict)
 
-            if ApexOCREngine.is_valid_results(results_dict):
+            if self.is_valid_results(results_dict):
                 # Currently only supporting squad stats
                 # Will need to change this if there is another output filepath or format
                 if utils.write_to_file(
@@ -445,3 +476,8 @@ class ApexOCREngine:
 
                 if DATABASE and self.db_conn is not None:
                     self.db_conn.push_results(results_dict)
+            else:
+                if isinstance(image, Path):
+                    logger.error(f"Invalid results for {image}: {results_dict}")
+                else:
+                    logger.error(f"Invalid results for screenshot: {results_dict}")
