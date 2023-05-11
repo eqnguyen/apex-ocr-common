@@ -10,9 +10,10 @@ import numpy as np
 import yaml
 from joblib import Parallel, delayed, parallel_backend
 from paddleocr import PaddleOCR
-from PIL import Image, ImageGrab
+from PIL import Image, ImageDraw, ImageGrab
 
-from apex_ocr import utils
+# Important to mutate roi globals
+from apex_ocr import roi, utils
 from apex_ocr.config import (
     DATA_DIRECTORY,
     DATABASE,
@@ -22,9 +23,6 @@ from apex_ocr.config import (
 from apex_ocr.database.api import ApexDatabaseApi
 from apex_ocr.preprocessing import preprocess_image
 from apex_ocr.roi import get_rois
-
-# Important to mutate roi globals
-from apex_ocr import roi
 
 logger = logging.getLogger(__name__)
 
@@ -205,8 +203,6 @@ class ApexOCREngine:
         )
 
         if debug:
-            from PIL import ImageDraw
-
             draw = ImageDraw.Draw(image)
 
             draw.rectangle(roi.SUMMARY_ROI, width=3)
