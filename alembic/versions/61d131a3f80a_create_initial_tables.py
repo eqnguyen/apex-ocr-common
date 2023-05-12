@@ -76,8 +76,8 @@ class PlayerMatchResult(Base):
     __tablename__ = "player_match_result"
 
     id = Column(Integer, primary_key=True)
-    player_id = Column(Integer, ForeignKey("player.id", ondelete="CASCADE"))
     match_id = Column(Integer, ForeignKey("match_result.id", ondelete="CASCADE"))
+    player_id = Column(Integer, ForeignKey("player.id", ondelete="CASCADE"))
     legend = Column(Enum(Legends))
     kills = Column(Integer, nullable=False)
     assists = Column(Integer, nullable=False)
