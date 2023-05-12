@@ -136,6 +136,11 @@ class ApexOCREngine:
             logger.error("N/A found in results!")
             return False
 
+        # Check for valid squad placement range
+        if results["Place"] < 0 or results["Place"] > 20:
+            logger.error("Invalid value for squad placement!")
+            return False
+
         # Check for any fields with empty strings except for clan tag
         p1_clan_tag = results_copy.pop("P1 Clan")
         p2_clan_tag = results_copy.pop("P2 Clan")
