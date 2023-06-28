@@ -174,3 +174,7 @@ db.yml
 *.mdj
 
 .paddleocr/
+
+# Google Drive secrets
+client_secrets.json
+credentials.txt

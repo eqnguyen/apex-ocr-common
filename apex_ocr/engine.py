@@ -10,18 +10,20 @@ import numpy as np
 import yaml
 from joblib import Parallel, delayed, parallel_backend
 from paddleocr import PaddleOCR
-from PIL import Image, ImageGrab
+from PIL import Image, ImageDraw, ImageGrab
 
-from apex_ocr import utils
+# Important to mutate roi globals
+from apex_ocr import roi, utils
 from apex_ocr.config import (
     DATA_DIRECTORY,
     DATABASE,
     DATABASE_YML_FILE,
+    PARALLEL,
     SQUAD_STATS_FILE,
 )
 from apex_ocr.database.api import ApexDatabaseApi
 from apex_ocr.preprocessing import preprocess_image
-from apex_ocr.roi import SUMMARY_ROI, TOP_SCREEN, TOTAL_KILLS_ROI, get_rois, scale_rois
+from apex_ocr.roi import get_rois
 
 logger = logging.getLogger(__name__)
 
@@ -37,6 +39,7 @@ class ApexOCREngine:
         "Place",
         "Squad Kills",
         "P1",
+        "P1 Clan",
         "P1 Kills",
         "P1 Assists",
         "P1 Knocks",
@@ -45,6 +48,7 @@ class ApexOCREngine:
         "P1 Revives",
         "P1 Respawns",
         "P2",
+        "P2 Clan",
         "P2 Kills",
         "P2 Assists",
         "P2 Knocks",
@@ -53,6 +57,7 @@ class ApexOCREngine:
         "P2 Revives",
         "P2 Respawns",
         "P3",
+        "P3 Clan",
         "P3 Kills",
         "P3 Assists",
         "P3 Knocks",
@@ -120,27 +125,57 @@ class ApexOCREngine:
 
     @staticmethod
     def is_valid_results(results: dict) -> bool:
+        results_copy = results.copy()
+
         # Check for empty results dictionary
-        if not results:
+        if not results_copy:
             logger.error("Empty results!")
             return False
 
         # Check for "n/a" in squad placement
-        if "n/a" in results.values():
+        if "n/a" in results_copy.values():
             logger.error("N/A found in results!")
             return False
 
-        # Check for any fields with empty strings
-        if "" in results.values():
+        # Check for valid squad placement range
+        if results["Place"] < 0 or results["Place"] > 20:
+            logger.error("Invalid value for squad placement!")
+            return False
+
+        # Check for any fields with empty strings except for clan tag
+        p1_clan_tag = results_copy.pop("P1 Clan")
+        p2_clan_tag = results_copy.pop("P2 Clan")
+        p3_clan_tag = results_copy.pop("P3 Clan")
+        if "" in results_copy.values():
             logger.error("Empty string in results!")
             return False
 
         # Check for invalid kills / assists / knockdowns
-        if -1 in results.values():
+        if -1 in results_copy.values():
             logger.error("Inalid Kills/Assists/Knocks in results!")
             return False
 
         return True
+
+    @staticmethod
+    def process_player_name(text: str) -> Tuple[str, str]:
+        # Initialize variables
+        clan_tag = ""
+        player_name = ""
+
+        # Strip symbols from the end of text
+        text = re.sub(r"[^\w]+$", "", text)
+
+        # Search for pattern in text
+        match = re.search(r"^\[(\w{3,4})\](.*)", text)
+
+        if match:
+            clan_tag = match.group(1)
+            player_name = match.group(2)
+        else:
+            player_name = text
+
+        return clan_tag, player_name
 
     @staticmethod
     def process_kakn(text: str) -> Tuple[int, int, int]:
@@ -190,10 +225,10 @@ class ApexOCREngine:
                 logger.error(f"Unsupported input type: {type(input)}")
                 return None
         else:
-            image = ImageGrab.grab(bbox=TOP_SCREEN)
+            image = ImageGrab.grab(bbox=roi.TOP_SCREEN)
 
-        summary_img = np.array(image.crop(SUMMARY_ROI))
-        total_kills_img = np.array(image.crop(TOTAL_KILLS_ROI))
+        summary_img = np.array(image.crop(roi.SUMMARY_ROI))
+        total_kills_img = np.array(image.crop(roi.TOTAL_KILLS_ROI))
 
         summary_text = self.text_from_image_paddleocr(
             summary_img, blur_amount=3, text_detection=True
@@ -203,22 +238,16 @@ class ApexOCREngine:
         )
 
         if debug:
+            draw = ImageDraw.Draw(image)
+
+            draw.rectangle(roi.SUMMARY_ROI, width=3)
+            draw.rectangle(roi.TOTAL_KILLS_ROI, width=3)
+
+            draw.text((5, 5), f"{summary_text=}\n{kills_text=}", stroke_width=3)
             image.save(
                 DATA_DIRECTORY
                 / f"raw_{datetime.utcnow().strftime('%Y-%m-%d_%H-%M-%S')}.png"
             )
-
-            Image.fromarray(total_kills_img).save(
-                DATA_DIRECTORY
-                / f"preprocessed_{datetime.utcnow().strftime('%Y-%m-%d_%H-%M-%S')}.png"
-            )
-
-            with open(
-                DATA_DIRECTORY
-                / f"text_{datetime.utcnow().strftime('%Y-%m-%d_%H-%M-%S')}.txt",
-                "w+",
-            ) as f:
-                f.write(f"{summary_text}\n{kills_text}")
 
         if "summary" in summary_text:
             # TODO: Classify different categories of squad summary
@@ -280,7 +309,7 @@ class ApexOCREngine:
         else:
             # Take duplicate images immediately to get the most common interpretation
             dup_images = [
-                ImageGrab.grab(bbox=TOP_SCREEN) for _ in range(self.num_images)
+                ImageGrab.grab(bbox=roi.TOP_SCREEN) for _ in range(self.num_images)
             ]
             results_dict["Datetime"] = datetime.utcnow()
 
@@ -297,17 +326,21 @@ class ApexOCREngine:
 
         logger.info("Processing squad summary...")
 
-        with parallel_backend(
-            "threading", n_jobs=len(self.blurs)
-        ):  # , require='sharedmem'):
-            # job_args = [[img, blur_amount, matches] for img, blur_amount in zip(dup_images, self.blurs)]
-            # OCR for all the images captured, then assign interpretation to the associated stat
-            Parallel()(
-                delayed(self.process_squad_summary_page_helper)(
-                    img, blur_amount, matches
+        if PARALLEL:
+            with parallel_backend(
+                "threading", n_jobs=len(self.blurs)
+            ):  # , require='sharedmem'):
+                # job_args = [[img, blur_amount, matches] for img, blur_amount in zip(dup_images, self.blurs)]
+                # OCR for all the images captured, then assign interpretation to the associated stat
+                Parallel()(
+                    delayed(self.process_squad_summary_page_helper)(
+                        img, blur_amount, matches, debug
+                    )
+                    for img, blur_amount in zip(dup_images, self.blurs)
                 )
-                for img, blur_amount in zip(dup_images, self.blurs)
-            )
+        else:
+            for img, blur_amount in zip(dup_images, self.blurs):
+                self.process_squad_summary_page_helper(img, blur_amount, matches, debug)
 
         # For each image, find the most common OCR text interpretation for each stat
         # If no available interpretations of the stat, assign the value "n/a"
@@ -335,7 +368,7 @@ class ApexOCREngine:
             logger.error(f"img is None")
             exit(1)
         # Get regions of interest
-        squad_place, players = get_rois(img)
+        squad_place, players = get_rois(img, debug)
 
         if debug:
             img.save(
@@ -364,7 +397,9 @@ class ApexOCREngine:
                 player_dict["player"],
                 blur_amount,
             )
-            matches[player].append(player_name_text)
+            clan_tag, player_name = self.process_player_name(player_name_text)
+            matches[player].append(player_name)
+            matches[f"{player} Clan"].append(clan_tag)
 
             # Get player kills/assists/knockdowns
             kakn_text = self.text_from_image_paddleocr(player_dict["kakn"], blur_amount)
@@ -421,27 +456,27 @@ class ApexOCREngine:
         # Get squad kills
         matches["Squad Kills"].append(squad_kills)
 
-    def process_screenshot(self, image: Union[Path, None] = None) -> dict:
-        scale_rois(Image.open(image).size)
-
-        summary_type = self.classify_summary_page(image)
+    def process_screenshot(
+        self, image: Union[Path, None] = None, debug: bool = False
+    ) -> None:
+        summary_type = self.classify_summary_page(image, debug=debug)
         results_dict = {}
 
         if summary_type == SummaryType.PERSONAL:
             pass
 
         elif summary_type == SummaryType.SQUAD:
-            results_dict = self.process_squad_summary_page(image)
+            results_dict = self.process_squad_summary_page(image, debug)
 
         if results_dict:
             # Compute hash of results
-            d = ApexOCREngine.reformat_results(results_dict)
+            d = self.reformat_results(results_dict)
             results_dict["Hash"] = utils.hash_dict(d)
 
             # Print results to console
             utils.display_results(results_dict)
 
-            if ApexOCREngine.is_valid_results(results_dict):
+            if self.is_valid_results(results_dict):
                 # Currently only supporting squad stats
                 # Will need to change this if there is another output filepath or format
                 if utils.write_to_file(
@@ -451,5 +486,8 @@ class ApexOCREngine:
 
                 if DATABASE and self.db_conn is not None:
                     self.db_conn.push_results(results_dict)
-
-        return results_dict
+            else:
+                if isinstance(image, Path):
+                    logger.error(f"Invalid results for {image}: {results_dict}")
+                else:
+                    logger.error(f"Invalid results for screenshot: {results_dict}")
