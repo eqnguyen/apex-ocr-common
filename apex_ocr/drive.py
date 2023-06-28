@@ -1,6 +1,5 @@
 import logging
 
-from .config import GOOGLE_DRIVE_DIRECTORY
 from pydrive2.auth import GoogleAuth
 from pydrive2.drive import GoogleDrive
 from rich.logging import RichHandler
@@ -13,6 +12,8 @@ from rich.progress import (
     TimeElapsedColumn,
     TimeRemainingColumn,
 )
+
+from apex_ocr.config import GOOGLE_DRIVE_DIRECTORY
 
 logger = logging.getLogger("apex_ocr.drive")
 
