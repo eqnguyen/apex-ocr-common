@@ -55,8 +55,6 @@ def main(filepath: str, debug: bool):
         ) as pb:
             task1 = pb.add_task("Processing screenshots...", total=len(file_list))
 
-            #  Assumes all files are the same size
-            scale_rois(Image.open(file_list[0]).size)
             for screenshot_path in file_list:
                 logger.info(f"Performing OCR on {screenshot_path.name}...")
                 ocr_engine.process_screenshot(screenshot_path, debug)
@@ -64,7 +62,6 @@ def main(filepath: str, debug: bool):
                 pb.update(task1, advance=1)
 
     else:
-        scale_rois()
         logger.info("Watching screen...")
 
         while True:

@@ -23,7 +23,7 @@ from apex_ocr.config import (
 )
 from apex_ocr.database.api import ApexDatabaseApi
 from apex_ocr.preprocessing import preprocess_image
-from apex_ocr.roi import get_rois
+from apex_ocr.roi import get_rois, scale_rois
 
 logger = logging.getLogger(__name__)
 
@@ -458,7 +458,12 @@ class ApexOCREngine:
 
     def process_screenshot(
         self, image: Union[Path, None] = None, debug: bool = False
-    ) -> None:
+    ) -> dict:
+        if image:
+            scale_rois(Image.open(image).size)
+        else:
+            scale_rois()
+
         summary_type = self.classify_summary_page(image, debug=debug)
         results_dict = {}
 
@@ -491,3 +496,5 @@ class ApexOCREngine:
                     logger.error(f"Invalid results for {image}: {results_dict}")
                 else:
                     logger.error(f"Invalid results for screenshot: {results_dict}")
+
+        return results_dict
