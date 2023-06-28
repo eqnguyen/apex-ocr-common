@@ -18,6 +18,7 @@ from apex_ocr.config import (
     DATA_DIRECTORY,
     DATABASE,
     DATABASE_YML_FILE,
+    PARALLEL,
     SQUAD_STATS_FILE,
 )
 from apex_ocr.database.api import ApexDatabaseApi
@@ -325,17 +326,21 @@ class ApexOCREngine:
 
         logger.info("Processing squad summary...")
 
-        with parallel_backend(
-            "threading", n_jobs=len(self.blurs)
-        ):  # , require='sharedmem'):
-            # job_args = [[img, blur_amount, matches] for img, blur_amount in zip(dup_images, self.blurs)]
-            # OCR for all the images captured, then assign interpretation to the associated stat
-            Parallel()(
-                delayed(self.process_squad_summary_page_helper)(
-                    img, blur_amount, matches, debug
+        if PARALLEL:
+            with parallel_backend(
+                "threading", n_jobs=len(self.blurs)
+            ):  # , require='sharedmem'):
+                # job_args = [[img, blur_amount, matches] for img, blur_amount in zip(dup_images, self.blurs)]
+                # OCR for all the images captured, then assign interpretation to the associated stat
+                Parallel()(
+                    delayed(self.process_squad_summary_page_helper)(
+                        img, blur_amount, matches, debug
+                    )
+                    for img, blur_amount in zip(dup_images, self.blurs)
                 )
-                for img, blur_amount in zip(dup_images, self.blurs)
-            )
+        else:
+            for img, blur_amount in zip(dup_images, self.blurs):
+                self.process_squad_summary_page_helper(img, blur_amount, matches, debug)
 
         # For each image, find the most common OCR text interpretation for each stat
         # If no available interpretations of the stat, assign the value "n/a"

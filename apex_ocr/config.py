@@ -23,3 +23,6 @@ SQUAD_STATS_FILE = DATA_DIRECTORY / "squad_stats.csv"
 # Database output
 DATABASE = True
 DATABASE_YML_FILE = Path(__file__).parent.parent / "db.yml"
+
+# Parallel run settings
+PARALLEL = False
