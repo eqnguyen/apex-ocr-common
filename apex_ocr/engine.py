@@ -216,10 +216,12 @@ class ApexOCREngine:
         return time_survived_list
 
     def classify_summary_page(
-        self, input: Union[Path, None] = None, debug: bool = False
+        self, input: Union[Image.Image, Path, None] = None, debug: bool = False
     ) -> Union[SummaryType, None]:
-        if input:
-            if isinstance(input, Path):
+        if input is not None:
+            if isinstance(input, Image.Image):
+                image = input
+            elif isinstance(input, Path):
                 image = Image.open(str(input))
             else:
                 logger.error(f"Unsupported input type: {type(input)}")
@@ -293,18 +295,27 @@ class ApexOCREngine:
         return text
 
     def process_squad_summary_page(
-        self, image: Union[Path, None] = None, debug: bool = False
+        self, image: Union[Image.Image, Path, None] = None, debug: bool = False
     ) -> dict:
         results_dict = defaultdict(None)
 
-        if image:
-            pil_image = Image.open(image)
-            dup_images = [pil_image] * self.num_images
+        if image is not None:
+            if isinstance(image, Image.Image):
+                pil_image = image
+                results_dict["Datetime"] = datetime.utcnow()
 
-            # Screenshots do not have EXIF data so must resort to file OS stats
-            results_dict["Datetime"] = datetime.fromtimestamp(
-                image.stat().st_ctime, tz=timezone.utc
-            )
+            elif isinstance(image, Path):
+                pil_image = Image.open(str(image))
+                # Screenshots do not have EXIF data so must resort to file OS stats
+                results_dict["Datetime"] = datetime.fromtimestamp(
+                    image.stat().st_ctime, tz=timezone.utc
+                )
+
+            else:
+                logger.error(f"Unsupported image type: {type(image)}")
+                return results_dict
+
+            dup_images = [pil_image] * self.num_images
 
         else:
             # Take duplicate images immediately to get the most common interpretation
@@ -457,9 +468,11 @@ class ApexOCREngine:
         matches["Squad Kills"].append(squad_kills)
 
     def process_screenshot(
-        self, image: Union[Path, None] = None, debug: bool = False
+        self, image: Union[Image.Image, Path, None] = None, debug: bool = False
     ) -> dict:
-        if image:
+        if isinstance(image, Image.Image):
+            scale_rois(image.size)
+        elif isinstance(image, Path):
             scale_rois(Image.open(image).size)
         else:
             scale_rois()
