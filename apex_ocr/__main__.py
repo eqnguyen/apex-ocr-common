@@ -44,23 +44,26 @@ def main(filepath: str, debug:bool):
                 ]
             )
 
-        with Progress(
-            TextColumn("[progress.description]{task.description}"),
-            BarColumn(),
-            MofNCompleteColumn(),
-            TaskProgressColumn(),
-            TimeElapsedColumn(),
-            TimeRemainingColumn(),
-        ) as pb:
-            task1 = pb.add_task("Processing screenshots...", total=len(file_list))
+        if len(file_list) == 0:
+            logger.warning(f"No images found in {file_path}")
+        else:
+            with Progress(
+                TextColumn("[progress.description]{task.description}"),
+                BarColumn(),
+                MofNCompleteColumn(),
+                TaskProgressColumn(),
+                TimeElapsedColumn(),
+                TimeRemainingColumn(),
+            ) as pb:
+                task1 = pb.add_task("Processing screenshots...", total=len(file_list))
 
-            #  Assumes all files are the same size
-            scale_rois(Image.open(file_list[0]).size)
-            for screenshot_path in file_list:
-                logger.info(f"Performing OCR on {screenshot_path.name}...")
-                ocr_engine.process_screenshot(screenshot_path, debug)
+                #  Assumes all files are the same size
+                scale_rois(Image.open(file_list[0]).size)
+                for screenshot_path in file_list:
+                    logger.info(f"Performing OCR on {screenshot_path.name}...")
+                    ocr_engine.process_screenshot(screenshot_path, debug)
 
-                pb.update(task1, advance=1)
+                    pb.update(task1, advance=1)
 
     else:
         scale_rois()
