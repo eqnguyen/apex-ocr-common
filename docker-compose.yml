@@ -1,17 +1,13 @@
 version: "3.2"
 services:
   ocr:
-    image: apex_ocr
+    image: apex-ocr-common
     network_mode: "host"
     environment:
     - DISPLAY
     volumes:
       - ./data:/home/apex/apex-ocr/data
       - /tmp/.X11-unix:/tmp/.X11-unix:ro
-      - /run/user/1001/pulse:/run/user/1001/pulse:ro
-      - $HOME/.config/pulse:/usr/src/app/.config/pulse
-    devices:
-      - /dev/snd
     deploy:
       resources:
         reservations:
