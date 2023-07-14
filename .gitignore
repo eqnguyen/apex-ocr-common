@@ -164,6 +164,7 @@ cython_debug/
 
 # Saved data
 data/
+server/uploads/
 *.csv
 
 # Database configuration
@@ -173,3 +174,7 @@ db.yml
 *.mdj
 
 .paddleocr/
+
+# Google Drive secrets
+client_secrets.json
+credentials.txt

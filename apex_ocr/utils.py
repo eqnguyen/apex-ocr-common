@@ -56,7 +56,12 @@ def display_results(results: dict) -> None:
     ]
 
     for i, player in enumerate(["P1", "P2", "P3"]):
-        player_tables[i].title = results[player]
+        clan_tag = results[f"{player} Clan"]
+
+        if clan_tag:
+            player_tables[i].title = f"\\[{clan_tag}] {results[player]}"
+        else:
+            player_tables[i].title = results[player]
 
         for stat in [
             "Kills",

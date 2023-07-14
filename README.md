@@ -74,9 +74,16 @@ port: 5432
 database_name: apex-legends
 ```
 
-Once the proper database configurations have been set in `db.yml`, run the following command from the root project directory to initialize the database tables.
+Once the proper database configurations have been set in `db.yml`, run the following command from the root project directory to initialize the database tables:
 
 ```bash
+alembic upgrade head
+```
+
+If you want to drop everything from the database and start over, you can run the following commands from the project directory to re-initialize the tables.
+
+```bash
+alembic downgrade -1
 alembic upgrade head
 ```
 
@@ -92,6 +99,14 @@ Most of the configurations for this application can be modified in `config.py`:
 
 - Modify `DATA_DIRECTORY` or `SQUAD_STATS_FILE` to change the name/path of the output CSV files
 - Modify `DATABASE` and `DATABASE_YML_FILE` to enable/disable database output as well as changing the name/path of the database configuration file
+
+## Google Drive
+
+This project has been designed to integrate with Google Drive to load and store screenshots of match summaries. In order to leverage Google Drive, you must first create an acount and [enable the API](https://support.google.com/googleapi/answer/6158841?hl=en) to get [client secrets](https://developers.google.com/api-client-library/dotnet/guide/aaa_client_secrets). Once that is complete, create an empty file at the top level of the repository named `credentials.txt`. This file will be used to cache authentication information so you don't have to authenticate through the browser each time you interact with Drive. Apex screenshots are expected to be uploaded to Google Drive in a directory named `screenshots`. Once you have data in that folder, you can download them to the `data` directory by running the following command:
+
+```bash
+python -m apex_ocr.drive
+```
 
 ## Usage
 
@@ -113,7 +128,7 @@ The package can also be run with a single command-line argument for path to scre
 python -m apex_ocr <path/to/file/or/directory/>
 ```
 
-If the argument is a path to a single image, the program will process that screenshot and exit. If the argument is a path to a directory containing many screenshots, the program will iterate through all the images in that directory, then exit. 
+If the argument is a path to a single image, the program will process that screenshot and exit. If the argument is a path to a directory containing many screenshots, the program will iterate through all the images in that directory, then exit.
 
 ## Contributing
 
