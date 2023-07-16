@@ -5,8 +5,10 @@ services:
     network_mode: "host"
     environment:
     - DISPLAY
+    # Some code (gradio in particular) is printing (instead of logging). Unbuffered output is desireable for docker-compose
+    - PYTHONUNBUFFERED=1
     volumes:
-      - ./data:/home/apex/apex-ocr/data
+      - ./data:/home/apex/apex-ocr-common/apex_ocr/data
       - /tmp/.X11-unix:/tmp/.X11-unix:ro
     deploy:
       resources:

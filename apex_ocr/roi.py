@@ -1,6 +1,8 @@
 import logging
 from datetime import datetime
 from typing import Tuple, Union
+from pathlib import Path
+import json
 
 import numpy as np
 from PIL import ImageDraw
@@ -49,8 +51,11 @@ ROI_VARS = {
     "REV_RES_WIDTH": 60,
 }
 
+RESOLUTION_DIR = Path("/home/apex/apex-ocr-common/apex_ocr/data/")
+
 
 def scale_rois(resolution: Union[Tuple[int, int], None] = None):
+    logger.info(f"scale_rois {resolution=}")
     # resolution means we are analyzing screenshot(s)
     if resolution:
         width, height = resolution
@@ -81,13 +86,23 @@ def calculate_rois(width: int, height: int, x: int, y: int):
         width * 2 // 3,
         height // 10,
     )
-
     TOP_SCREEN = (
         x,
         y,
         x + width,
         y + height,
     )
+    logger.info(f"{TOP_SCREEN=}")
+
+    res_file_name = f"{width}x{height}x{x}x{y}.json"
+    resolution_file = RESOLUTION_DIR / res_file_name
+    if resolution_file.exists():
+        logger.info(f"ROI precalculated")
+        SQUAD_PLACE_ROI, ROI_DICT, TOTAL_KILLS_ROI = json.loads(resolution_file.read_text())
+        return
+
+    logger.warning(f"New resolution detected!")
+
 
     # Squad placement
     SQUAD_PLACE_ROI = (
@@ -221,6 +236,9 @@ def calculate_rois(width: int, height: int, x: int, y: int):
         ROI_VARS["P3_COL_START"] + ROI_VARS["REV_RES_WIDTH"],
         ROI_VARS["RES_ROW_START"] + ROI_VARS["PLAYER_ROW_HEIGHT"],
     )
+
+    with open(RESOLUTION_DIR / res_file_name, mode='x') as f:
+        f.write(json.dumps([SQUAD_PLACE_ROI, ROI_DICT, TOTAL_KILLS_ROI], indent=4, sort_keys=True))
 
 
 def get_rois(img: Image, debug: bool = False) -> Tuple[np.ndarray, dict]:
