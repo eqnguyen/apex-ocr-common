@@ -1,8 +1,6 @@
 import logging
 
 import gradio as gr
-from PIL import Image
-from PIL import ImageDraw
 from rich.logging import RichHandler
 from pathlib import Path
 
@@ -14,13 +12,23 @@ logging.captureWarnings(True)
 logger = logging.getLogger(__name__)
 
 engine = ApexOCREngine()
-        
 
-def process_image(image):
-    if image is None:
+
+def process_image(images):
+    if len(images) == 0:
         raise_error("Please select an image to analyze")
-    results = engine.process_screenshot(Image.fromarray(image), debug=True)
+    
+    image_paths = [Path(image.name) for image in images]
+
+    results = []
+    for image_path in image_paths:
+        logger.info(f"Processing {image_path}")
+        results.append(engine.process_screenshot(image_path, debug=False))
     return results
+
+
+def display_files_to_upload(images):
+    return [image.name for image in images]
 
 
 if __name__ == "__main__":
@@ -37,10 +45,14 @@ if __name__ == "__main__":
 
     with gr.Blocks(title="Apex OCR") as interface:
         with gr.Tab("Upload and Analyze Summary"):
-            input = gr.inputs.Image(label="Input").style(height=480)
+            with gr.Row():
+                file_input = gr.File(label="image_uploads", file_count="multiple", file_types=["images"])
+            
+                gallery = gr.Gallery()
             btn = gr.Button(label="Submit")
-            output = gr.outputs.JSON(label="Result")
-            btn.click(process_image, input, output, api_name="process_image")
+            results = gr.outputs.JSON(label="Result")
+            btn.click(process_image, file_input, results, api_name="process_image")
+            file_input.change(display_files_to_upload, file_input, gallery)
 
         with gr.Tab("Create BBox Template"):
             with gr.Row():
@@ -123,6 +135,6 @@ if __name__ == "__main__":
                         )
                         add_bbox_annotation.click(store_bbox_template_data, [sample_image, x_min_slider, y_min_slider, x_max_slider, y_max_slider, bbox_label_dropdown], template_image, api_name="store_bbox_template_data")
         
-        interface.launch(debug=True, inbrowser=False, show_error=True)
+    interface.launch(inbrowser=False, show_error=True)
             
 
