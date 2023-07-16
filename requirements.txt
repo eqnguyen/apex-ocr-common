@@ -37,8 +37,8 @@ fsspec==2023.4.0
 future==0.18.3
 gevent==22.10.2
 geventhttpclient==2.0.2
-gradio==3.27.0
-gradio_client==0.1.3
+gradio==3.36.1
+gradio_client==0.2.7
 greenlet==2.0.2
 grpcio==1.54.0
 h11==0.14.0
