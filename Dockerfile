@@ -43,6 +43,6 @@ ENV PYTHONPATH=/home/apex/apex-ocr-common/apex_ocr:$PYTHONPATH
 ENV PYTHONPATH=/home/apex/apex-ocr-common:$PYTHONPATH
 
 # ENTRYPOINT [ "python3", "apex-ocr-common/apex_ocr/__main__.py" ]
-# ENTRYPOINT [ "python3", "apex-ocr-common/apex_ocr/__main__.py", "/home/apex/apex-ocr-common/apex_ocr/data/input" ]
+# ENTRYPOINT [ "python3", "apex-ocr-common/apex_ocr/__main__.py", "/home/apex/apex-ocr-common/data/small_input" ]
 ENTRYPOINT [ "python3", "apex-ocr-common/server/app.py"]
 # ENTRYPOINT [ "sleep", "100000" ]
