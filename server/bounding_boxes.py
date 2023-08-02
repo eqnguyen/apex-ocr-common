@@ -6,11 +6,10 @@ from PIL import ImageDraw
 import json
 from pathlib import Path
 
-from utils import raise_error
+from apex_ocr.config import RESOLUTION_DIR, USER_DEFINED_REOLUTION_DIR
+
 
 logger = logging.getLogger(__name__)
-
-RESOLUTION_DIR = Path("/home/apex/apex-ocr-common/apex_ocr/data/")
 
 
 def adjust_image_bbox(min_x, min_y, max_x, max_y, image, bbox_label):
@@ -54,11 +53,20 @@ def adjust_slider_maximums(image):
 
 def load_bbox_template_file(width, height):
     rois = {}
-    res_file_name = f"{width}x{height}x0x0.json"
+    res_file_name = f"{width}x{height}.json"
     resolution_file = RESOLUTION_DIR / res_file_name
     if resolution_file.exists():
         logger.info(f"ROI precalculated")
         rois = json.loads(resolution_file.read_text())
+    else:
+        user_defined_resolution_file = USER_DEFINED_REOLUTION_DIR / res_file_name
+        if user_defined_resolution_file.exists():
+            logger.info(f"ROI precalculated freom user defined")
+            rois = json.loads(user_defined_resolution_file.read_text())
+    
+    if rois == {}:
+        logger.error(f"{RESOLUTION_DIR=} {USER_DEFINED_REOLUTION_DIR=} {res_file_name=}")
+
     return rois
 
 
@@ -77,8 +85,9 @@ def store_bbox_template_data(image, x_min:int, y_min:int, x_max:int, y_max:int, 
         rois[player][attribute] = [x_min, y_min, x_max, y_max]
 
     res_file_name = f"{width}x{height}x0x0.json"
-    resolution_file = RESOLUTION_DIR / res_file_name
+    resolution_file = USER_DEFINED_REOLUTION_DIR / res_file_name
     with open(resolution_file, 'w') as f:
+        # TODO: Make this obj a class
         f.write(json.dumps([squad_place_roi, rois, total_kills_roi], indent=4, sort_keys=True))
 
     return apply_bbox_template(image)
