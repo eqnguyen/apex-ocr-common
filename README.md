@@ -16,8 +16,8 @@
 ### Clone the Repository
 
 ```bash
-git clone git@github.com:eqnguyen/apex-ocr.git
-cd apex-ocr
+git clone git@github.com:eqnguyen/apex-ocr-common.git
+cd apex-ocr-common
 ```
 
 ### Create a Virtual Environment

@@ -307,9 +307,17 @@ class ApexOCREngine:
             elif isinstance(image, Path):
                 pil_image = Image.open(str(image))
                 # Screenshots do not have EXIF data so must resort to file OS stats
-                results_dict["Datetime"] = datetime.fromtimestamp(
-                    image.stat().st_ctime, tz=timezone.utc
-                )
+                linux_screenshot_format = 'Screenshot from %Y-%m-%d %H-%M-%S'
+                windows_screenshot_format = '%Y%m%d%H%M%S_1'
+                
+                try:
+                    screenshot_datetime = datetime.strptime(image.stem, linux_screenshot_format)
+                except ValueError as e:
+                    logger.warning(f"Not linux timestamp {image.stem}")
+                    screenshot_datetime = datetime.strptime(image.stem, windows_screenshot_format)
+
+                logger.info(f"{image.stem=} {screenshot_datetime=}")
+                results_dict["Datetime"] = screenshot_datetime
 
             else:
                 logger.error(f"Unsupported image type: {type(image)}")
@@ -479,6 +487,7 @@ class ApexOCREngine:
 
         summary_type = self.classify_summary_page(image, debug=debug)
         results_dict = {}
+        logger.info(f"{summary_type=}")
 
         if summary_type == SummaryType.PERSONAL:
             pass
