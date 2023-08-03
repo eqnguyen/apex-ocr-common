@@ -1,7 +1,7 @@
 version: "3.2"
 services:
   ocr:
-    image: apex_ocr
+    build: .
     network_mode: "host"
     environment:
     - DISPLAY
