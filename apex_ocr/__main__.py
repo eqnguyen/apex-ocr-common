@@ -27,6 +27,7 @@ logger = logging.getLogger(__name__)
 @click.command()
 @click.argument("filepath", required=False, type=click.Path(exists=True))
 @click.option("-d", "--debug", is_flag=True, show_default=True, default=False)
+@click.version_option()
 def main(filepath: str, debug: bool):
     ocr_engine = ApexOCREngine()
 
