@@ -174,4 +174,4 @@ server/uploads/
 
 # Google Drive secrets
 client_secrets.json
-credentials.txt
+credentials.json
