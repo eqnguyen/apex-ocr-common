@@ -8,22 +8,17 @@ from typing import DefaultDict, List, Tuple, Union
 
 import numpy as np
 import yaml
-from joblib import Parallel, delayed, parallel_backend
-from paddleocr import PaddleOCR
-from PIL import Image, ImageDraw, ImageGrab
 
 # Important to mutate roi globals
 from apex_ocr import roi, utils
-from apex_ocr.config import (
-    DATA_DIRECTORY,
-    DATABASE,
-    DATABASE_YML_FILE,
-    PARALLEL,
-    SQUAD_STATS_FILE,
-)
-from apex_ocr.database.api import ApexDatabaseApi
+from apex_ocr.config import DATA_DIRECTORY, PARALLEL, SQUAD_STATS_FILE
 from apex_ocr.preprocessing import preprocess_image
 from apex_ocr.roi import get_rois, scale_rois
+from apex_ocr_server.config import DATABASE, DATABASE_YML_FILE
+from apex_ocr_server.database.api import ApexDatabaseApi
+from joblib import Parallel, delayed, parallel_backend
+from paddleocr import PaddleOCR
+from PIL import Image, ImageDraw, ImageGrab
 
 logger = logging.getLogger(__name__)
 

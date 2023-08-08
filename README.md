@@ -57,40 +57,6 @@ PaddlePaddle is installed successfully! Let's start deep learning with PaddlePad
 
 A dockerfile has been provided that should set up the required environment. https://support.system76.com/articles/cuda/ might also be useful, since the docker will require a gpu to run.
 
-## Database
-
-[database]: #database
-
-By default, this tool will output results to CSVs files. However, this project can be configured to output to a SQL database as well. Alembic is used for managing database migrations, but before running the first command, make sure to create/update the `db.yml` file in the root directory.
-
-Sample file:
-
-```yaml
-dialect: postgresql
-username: <username>
-password: <password>
-hostname: localhost
-port: 5432
-database_name: apex-legends
-```
-
-Once the proper database configurations have been set in `db.yml`, run the following command from the root project directory to initialize the database tables:
-
-```bash
-alembic upgrade head
-```
-
-If you want to drop everything from the database and start over, you can run the following commands from the project directory to re-initialize the tables.
-
-```bash
-alembic downgrade -1
-alembic upgrade head
-```
-
-### Schema
-
-![Database Schema](./docs/database_schema.jpg)
-
 ## Configuration
 
 [configuration]: #configuration
@@ -98,7 +64,6 @@ alembic upgrade head
 Most of the configurations for this application can be modified in `config.py`:
 
 - Modify `DATA_DIRECTORY` or `SQUAD_STATS_FILE` to change the name/path of the output CSV files
-- Modify `DATABASE` and `DATABASE_YML_FILE` to enable/disable database output as well as changing the name/path of the database configuration file
 
 ## Google Drive
 

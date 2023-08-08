@@ -167,9 +167,6 @@ data/
 server/uploads/
 *.csv
 
-# Database configuration
-db.yml
-
 # UML project files
 *.mdj
 
