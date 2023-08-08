@@ -19,9 +19,19 @@ logger = logging.getLogger("apex_ocr.drive")
 
 
 def download_from_google_drive():
-    gauth = GoogleAuth()
+    gauth = GoogleAuth(
+        settings={
+            "client_config_backend": "file",
+            "client_config_file": "client_secrets.json",
+            "oauth_scope": ["https://www.googleapis.com/auth/drive"],
+            "save_credentials": True,
+            "save_credentials_backend": "file",
+            "save_credentials_file": "credentials.json",
+            "get_refresh_token": True,
+        }
+    )
 
-    gauth.LoadCredentialsFile("credentials.txt")
+    gauth.LoadCredentialsFile("credentials.json")
 
     if gauth.credentials is None:
         gauth.LocalWebserverAuth()
@@ -30,7 +40,7 @@ def download_from_google_drive():
     else:
         gauth.Authorize()
 
-    gauth.SaveCredentialsFile("credentials.txt")
+    gauth.SaveCredentialsFile("credentials.json")
     drive = GoogleDrive(gauth)
 
     folder_list = drive.ListFile({"q": "'root' in parents"}).GetList()
