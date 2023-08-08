@@ -4,7 +4,8 @@ from datetime import datetime
 from pathlib import Path
 
 import click
-from PIL import Image
+from apex_ocr.config import IMAGE_EXTENSIONS, LOG_DIRECTORY
+from apex_ocr.engine import ApexOCREngine
 from rich.logging import RichHandler
 from rich.progress import (
     BarColumn,
@@ -15,10 +16,6 @@ from rich.progress import (
     TimeElapsedColumn,
     TimeRemainingColumn,
 )
-
-from apex_ocr.config import IMAGE_EXTENSIONS, LOG_DIRECTORY
-from apex_ocr.engine import ApexOCREngine
-from apex_ocr.roi import scale_rois
 
 logging.captureWarnings(True)
 logger = logging.getLogger(__name__)
@@ -59,7 +56,6 @@ def main(filepath: str, debug: bool):
             for screenshot_path in file_list:
                 logger.info(f"Performing OCR on {screenshot_path.name}...")
                 ocr_engine.process_screenshot(screenshot_path, debug)
-
                 pb.update(task1, advance=1)
 
     else:
@@ -73,8 +69,7 @@ def main(filepath: str, debug: bool):
 if __name__ == "__main__":
     # Configure logger
     file_handler = logging.FileHandler(
-        LOG_DIRECTORY
-        / f"apex_ocr_{datetime.utcnow().strftime('%Y-%m-%d_%H-%M-%S')}.log"
+        LOG_DIRECTORY / f"{datetime.utcnow().strftime('%Y%m%d_%H%M%S')}.log"
     )
     file_handler.setLevel(logging.DEBUG)
     file_handler.setFormatter(
