@@ -8,7 +8,7 @@ import numpy as np
 from PIL import ImageDraw
 from PIL.Image import Image
 
-from apex_ocr.config import DATA_DIRECTORY
+from apex_ocr.config import DATA_DIRECTORY, RESOLUTION_DIR, USER_DEFINED_REOLUTION_DIR
 from apex_ocr.utils import get_primary_monitor
 
 logger = logging.getLogger(__name__)
@@ -50,8 +50,6 @@ ROI_VARS = {
     "SURV_TIME_WIDTH": 130,
     "REV_RES_WIDTH": 60,
 }
-
-RESOLUTION_DIR = Path("/home/apex/apex-ocr-common/apex_ocr/data/")
 
 
 def scale_rois(resolution: Union[Tuple[int, int], None] = None):
@@ -100,6 +98,12 @@ def calculate_rois(width: int, height: int, x: int, y: int):
         logger.info(f"ROI precalculated")
         SQUAD_PLACE_ROI, ROI_DICT, TOTAL_KILLS_ROI = json.loads(resolution_file.read_text())
         return
+    else:
+        user_defined_resolution_file = USER_DEFINED_REOLUTION_DIR / res_file_name
+        if user_defined_resolution_file.exists():
+            logger.info(f"ROI precalculated")
+            SQUAD_PLACE_ROI, ROI_DICT, TOTAL_KILLS_ROI = json.loads(user_defined_resolution_file.read_text())
+            return
 
     logger.warning(f"New resolution detected!")
 

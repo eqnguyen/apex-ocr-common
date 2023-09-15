@@ -1,15 +1,14 @@
 import logging
-
 import gradio as gr
-from rich.logging import RichHandler
 from pathlib import Path
 
 from apex_ocr.engine import ApexOCREngine
 from utils import raise_error
 from bounding_boxes import adjust_image_bbox, adjust_slider_vals, adjust_slider_maximums, store_bbox_template_data, apply_bbox_template
 
-logging.captureWarnings(True)
+
 logger = logging.getLogger(__name__)
+
 
 engine = ApexOCREngine()
 
@@ -32,17 +31,6 @@ def display_files_to_upload(images):
 
 
 if __name__ == "__main__":
-    # Configure logger
-    logging.basicConfig(
-        level=logging.INFO,
-        format=" %(name)s | %(message)s",
-        datefmt="%Y-%m-%d %H:%M:%S",
-        force=True,
-        handlers=[
-            RichHandler(omit_repeated_times=False, rich_tracebacks=True),
-        ],
-    )
-
     with gr.Blocks(title="Apex OCR") as interface:
         with gr.Tab("Upload and Analyze Summary"):
             with gr.Row():
