@@ -10,10 +10,10 @@ services:
     volumes:
       - ./data:/home/apex/apex-ocr-common/apex_ocr/data
       - /tmp/.X11-unix:/tmp/.X11-unix:ro
-    deploy:
-      resources:
-        reservations:
-          devices:
-            - driver: nvidia
-              count: 1
-              capabilities: [gpu]
+    # deploy:
+    #   resources:
+    #     reservations:
+    #       devices:
+    #         - driver: nvidia
+    #           count: 1
+    #           capabilities: [gpu]

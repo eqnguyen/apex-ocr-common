@@ -36,6 +36,7 @@ COPY --chown=apex cache_paddle.py /home/apex/
 RUN python3 /home/apex/cache_paddle.py
 
 RUN pip3 install joblib
+# RUN pip3 install paddlepaddle
 
 # Copy program files
 COPY --chown=apex . /home/apex/apex-ocr-common
@@ -46,3 +47,4 @@ ENV PYTHONPATH=/home/apex/apex-ocr-common:$PYTHONPATH
 # ENTRYPOINT [ "python3", "apex-ocr-common/apex_ocr/__main__.py", "/home/apex/apex-ocr-common/apex_ocr/data/input" ]
 ENTRYPOINT [ "python3", "apex-ocr-common/server/app.py"]
 # ENTRYPOINT [ "sleep", "100000" ]
+# ENTRYPOINT [ "python3", "-c", "import paddle; paddle.utils.run_check()"]
