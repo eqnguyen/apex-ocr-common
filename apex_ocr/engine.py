@@ -302,8 +302,22 @@ class ApexOCREngine:
             elif isinstance(image, Path):
                 pil_image = Image.open(str(image))
                 # Screenshots do not have EXIF data so must resort to file OS stats
-                results_dict["Datetime"] = datetime.fromtimestamp(
-                    image.stat().st_ctime, tz=timezone.utc
+                # Screenshots do not have EXIF data so must resort to file OS stats
+                linux_screenshot_format = "Screenshot from %Y-%m-%d %H-%M-%S"
+                windows_screenshot_format = "%Y%m%d%H%M%S_1"
+
+                try:
+                    screenshot_datetime = datetime.strptime(
+                        image.stem, linux_screenshot_format
+                    ).replace(tzinfo=timezone.utc)
+                except ValueError as e:
+                    logger.warning(f"Not linux timestamp {image.stem}")
+                    screenshot_datetime = datetime.strptime(
+                        image.stem, windows_screenshot_format
+                    ).replace(tzinfo=timezone.utc)
+
+                results_dict["Datetime"] = screenshot_datetime.replace(
+                    tzinfo=timezone.utc
                 )
 
             else:

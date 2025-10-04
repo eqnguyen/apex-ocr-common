@@ -25,32 +25,35 @@ TOP_SCREEN = ()
 ROI_DICT = {}
 SQUAD_PLACE_ROI = ()
 
-ROI_VARS = {
-    "TOP_ROW_START": 120,
-    "PLAYER_ROW_START": 290,
-    "KAKN_ROW_START": 402,
-    "DAMAGE_ROW_START": 480,
-    "SURV_TIME_ROW_START": 556,
-    "REV_ROW_START": 632,
-    "RES_ROW_START": 708,
-    "TOP_ROW_HEIGHT": 62,
-    "PLAYER_ROW_HEIGHT": 32,
-    "SQUAD_PLACE_COL_START": 1345,
-    "TOTAL_KILL_COL_START": 1600,
-    "P1_COL_START": 125,
-    "P2_COL_START": 725,
-    "P3_COL_START": 1325,
-    "SQUAD_PLACE_WIDTH": 255,
-    "TOTAL_KILL_WIDTH": 220,
-    "PLAYER_WIDTH": 215,
-    "KAKN_WIDTH": 150,
-    "DAMAGE_WIDTH": 130,
-    "SURV_TIME_WIDTH": 130,
-    "REV_RES_WIDTH": 60,
-}
+ROI_VARS = {}
 
 
 def scale_rois(resolution: Union[Tuple[int, int], None] = None):
+    global ROI_VARS
+    ROI_VARS = {
+        "TOP_ROW_START": 120,
+        "PLAYER_ROW_START": 290,
+        "KAKN_ROW_START": 402,
+        "DAMAGE_ROW_START": 480,
+        "SURV_TIME_ROW_START": 556,
+        "REV_ROW_START": 632,
+        "RES_ROW_START": 708,
+        "TOP_ROW_HEIGHT": 62,
+        "PLAYER_ROW_HEIGHT": 32,
+        "SQUAD_PLACE_COL_START": 1345,
+        "TOTAL_KILL_COL_START": 1600,
+        "P1_COL_START": 125,
+        "P2_COL_START": 725,
+        "P3_COL_START": 1325,
+        "SQUAD_PLACE_WIDTH": 255,
+        "TOTAL_KILL_WIDTH": 220,
+        "PLAYER_WIDTH": 215,
+        "KAKN_WIDTH": 150,
+        "DAMAGE_WIDTH": 130,
+        "SURV_TIME_WIDTH": 130,
+        "REV_RES_WIDTH": 60,
+    }
+
     # resolution means we are analyzing screenshot(s)
     if resolution:
         width, height = resolution
